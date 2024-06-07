@@ -33,3 +33,6 @@
 
 # Nix-specific
 .direnv
+
+# Application-specific
+data
