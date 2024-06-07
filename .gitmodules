@@ -1,3 +1,6 @@
 [submodule "include/fastflow"]
 	path = include/fastflow
 	url = https://github.com/fastflow/fastflow
+[submodule "include/miniz"]
+	path = include/miniz
+	url = https://github.com/richgel999/miniz
