@@ -1,5 +1,5 @@
-#ifndef _USAGE
-#define _USAGE
+#ifndef _CUI_USAGE
+#define _CUI_USAGE
 
 #include <iostream>
 
