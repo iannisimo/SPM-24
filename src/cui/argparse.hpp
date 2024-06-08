@@ -1,5 +1,5 @@
-#ifndef _ARGPARSE
-#define _ARGPARSE
+#ifndef _CUI_ARGPARSE
+#define _CUI_ARGPARSE
 
 #include <iostream>
 #include <unistd.h>
