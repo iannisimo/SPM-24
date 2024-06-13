@@ -34,8 +34,10 @@
 # Nix-specific
 .direnv
 
-# vscode
+# ide
 .vscode
+.idea
 
 # Build
 build/*
+cmake-build-debug

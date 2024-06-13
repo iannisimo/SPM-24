@@ -2,13 +2,22 @@
 #include "utils.hpp"
 #include <iostream>
 #include <fstream>
-#include <string.h>
+#include <cstring>
+#include <utility>
+#include <fcntl.h>
+#include "logger.hpp"
+#include <sys/mman.h>
+#include <unistd.h>
 
 const char* ZIP_MAGIC = "spmzip";
 const unsigned char ZIP_MAGIC_LEN = 6;
 
 
 namespace fs = std::filesystem;
+
+// ----------
+// | Entity |
+// ----------
 
 Entity::operator bool() const {
   return this->exists;
@@ -53,14 +62,43 @@ Entity::Entity(std::string rel_path) {
 
 Entity::Entity(char* rel_path) : Entity::Entity(std::string(rel_path)) {}
 
+// --------
+// | File |
+// --------
+
 File::File(fs::path path) {
-  this->path = path;
-  std::cout << this->path.filename() << std::endl;
+  this->path = std::move(path);
+  LOG_D("File", "Created file " + this->get_name());
   this->load();
 }
 
-void File::load() {
-  std::cout << this->is_compressed() << std::endl;
+bool File::load() {
+  if (!this->exists()) {
+    LOG_E("load", "File does not exist");
+      return false;
+  }
+
+  int fd = open(this->get_abs_path().c_str(), O_RDONLY);
+
+  if (fd < 0) {
+    LOG_E("open", "Could not open file: " + this->get_name());
+    return false;
+  }
+
+  if (fstat(fd, &this->stats)) {
+    LOG_E("fstat", "Could not stat " + this->get_name());
+    return false;
+  }
+
+  this->contents = (unsigned char*) mmap(nullptr, this->stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  if (this->contents == MAP_FAILED) {
+    LOG_E("mmap", "Error mapping file to memory: " + this->get_name());
+  }
+  close(fd);
+
+  std::cout << this->contents << std::endl;
+
+  return true;
 }
 
 int File::get_magic(unsigned short len, char* buf) {

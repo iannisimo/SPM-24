@@ -25,10 +25,11 @@ class File {
     bool exists() { return fs::exists(this->path); };
     operator bool() { return this->exists();};
 
-    void load();
+    bool load();
 
   private:
     fs::path path;
+    struct stat stats;
     unsigned char* contents;
 
     int get_magic(unsigned short len, char* buf);

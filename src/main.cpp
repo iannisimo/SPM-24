@@ -2,8 +2,10 @@
 #include "cui/usage.hpp"
 #include "compressor/utils.hpp"
 #include "miniz.h"
+#include "logger.hpp"
 
 int main(int argc, char *argv[]) {
+
   config args;
   args.argparse(argc, argv);
   if (args.help) {
