@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool quiet = false;
+int LOGGER_QUIET = 0;
 
 #ifdef DEBUG
 bool debug = true;
@@ -13,11 +13,16 @@ bool debug = false;
 
 
 void LOG_E(const std::string tag, const std::string msg) {
-  perror(tag.c_str());
-  std::cerr << msg << std::endl;
+  if (LOGGER_QUIET > 2) return;
+  if (tag[0] != 0) {
+    std::cerr << tag << ": " << msg << std::endl;
+  } else {
+    std::cerr << msg << std::endl;
+  }
 }
 
-void LOG_I(const std::string tag, const std::string msg) {
+void LOG_W(const std::string tag, const std::string msg) {
+  if (LOGGER_QUIET > 1) return;
   if (tag[0] != 0) {
     std::cout << tag << ": " << msg << std::endl;
   } else {
@@ -25,8 +30,8 @@ void LOG_I(const std::string tag, const std::string msg) {
   }
 }
 
-void LOG_W(const std::string tag, const std::string msg) {
-  if (quiet) return;
+void LOG_I(const std::string tag, const std::string msg) {
+  if (LOGGER_QUIET > 0) return;
   if (tag[0] != 0) {
     std::cout << tag << ": " << msg << std::endl;
   } else {

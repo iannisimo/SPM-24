@@ -12,6 +12,8 @@ int main(int argc, char *argv[]) {
     usage(args.pname);
     return 0;
   }
+  LOGGER_QUIET = args.quiet;
+
   for (int i = 0; i < args.n_targets; i++) {
     Entity e(args.targets[i]);
     if (!e) {

@@ -1,11 +1,12 @@
 #include "argparse.hpp"
 #include <iostream>
+#include <format>
+#include "logger.hpp"
 
 void config::argparse(int argc, char **argv) {
   pname = argv[0];
   int opt;
   while ((opt = getopt(argc, argv, ARGS)) != -1) {
-    printf("opt = %c\n", opt);
     switch (opt) {
       case 'h':
         help = true;
@@ -19,14 +20,17 @@ void config::argparse(int argc, char **argv) {
       case 'r':
         recursive = true;
         break;
+      case 'q':
+        quiet += 1;
+        break;
       case 'S':
         suff = optarg;
         break;
       case ':':
-        std::cerr << "Option -" << optopt << " requires an argument" << std::endl;
+        LOG_E("args", std::format("Option -{} requires an argument", (char) optopt));
         break;
       case '?':
-        std::cerr << "Unknown option -" << optopt << std::endl;
+        LOG_W("args", std::format("Unknown option -{}", (char) optopt));
         break;
     }
   }

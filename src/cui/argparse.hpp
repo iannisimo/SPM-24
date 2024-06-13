@@ -4,7 +4,7 @@
 #include <iostream>
 #include <unistd.h>
 
-const char* ARGS = ":hdkrS:";
+const char* ARGS = ":hdkrqS:";
 
 struct config {
   bool    help       = false;
@@ -15,6 +15,7 @@ struct config {
   char*   pname      = NULL;
   char**  targets    = NULL;
   int     n_targets  = 0;
+  int     quiet      = 0;
 
   void argparse(int, char**);
 };
