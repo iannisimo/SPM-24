@@ -1,5 +1,5 @@
 #minimum cmake version required to compile our code
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.5)
 
 # project name
 project(multi_file)

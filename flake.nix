@@ -2,7 +2,7 @@
   description = "A template for Nix based C++ project setup.";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/21.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/24.05";
 
     utils.url = "github:numtide/flake-utils";
     utils.inputs.nixpkgs.follows = "nixpkgs";
