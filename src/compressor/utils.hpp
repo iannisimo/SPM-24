@@ -32,7 +32,7 @@ class File {
     struct stat stats;
     unsigned char* contents;
 
-    int get_magic(unsigned short len, char* buf);
+    bool get_magic(unsigned short len, char* buf);
     bool is_compressed();
 };
 
@@ -53,7 +53,7 @@ class Entity {
 
   private:
     bool exists = false;
-    std::vector<File> files;
+    std::vector<File> files = {};
 };
 
 #endif

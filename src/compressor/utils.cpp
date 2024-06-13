@@ -8,6 +8,7 @@
 #include "logger.hpp"
 #include <sys/mman.h>
 #include <unistd.h>
+#include <format>
 
 const char* ZIP_MAGIC = "spmzip";
 const unsigned char ZIP_MAGIC_LEN = 6;
@@ -44,7 +45,7 @@ Entity::Entity(std::string rel_path) {
   } else if (fs::is_directory(p)) {
     
     // Recurse folder and add all files to `this`
-    std::cout << this->name << " is a directory" << std::endl;
+    LOG_D("entity", std::format("{} is a directory... recursing", this->name));
     for (auto &&elem : fs::recursive_directory_iterator(p)) {
       if (elem.is_regular_file()) {
         this->files.emplace_back(File(elem));
@@ -53,9 +54,8 @@ Entity::Entity(std::string rel_path) {
     
   } else {
 
-    perror("file type");
-    std::cerr << this->name << " is not a file nor a directory" << std::endl;
-    exit(1);
+    LOG_E("entity", std::format("{} is not a file nor a directory", this->name));
+    return;
 
   }
 }
@@ -69,7 +69,6 @@ Entity::Entity(char* rel_path) : Entity::Entity(std::string(rel_path)) {}
 File::File(fs::path path) {
   this->path = std::move(path);
   LOG_D("File", "Created file " + this->get_name());
-  this->load();
 }
 
 bool File::load() {
@@ -87,38 +86,43 @@ bool File::load() {
 
   if (fstat(fd, &this->stats)) {
     LOG_E("fstat", "Could not stat " + this->get_name());
+    close(fd);
     return false;
   }
 
   this->contents = (unsigned char*) mmap(nullptr, this->stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (this->contents == MAP_FAILED) {
     LOG_E("mmap", "Error mapping file to memory: " + this->get_name());
+    close(fd);
+    return false;
   }
+  // contents read successfully, closind fd
   close(fd);
-
-  std::cout << this->contents << std::endl;
-
   return true;
 }
 
-int File::get_magic(unsigned short len, char* buf) {
+bool File::get_magic(unsigned short len, char* buf) {
   if (!this->exists()) return 0;
   std::ifstream file(this->get_abs_path(), std::ios::binary | std::ios::in);
   if (!file.is_open()) {
-    perror("file open");
-    std::cerr << "Could not open " << this->get_abs_path() << std::endl;
-    return -1;
+    LOG_E("get_magic", std::format("Could not open {}", this->get_name()));
+    return false;
   }
   file.read(buf, len);
   file.close();
-  return 0;
+  return true;
 }
 
+/**
+ * \brief Check if a file is compressed by matching the first bytes to a signature
+ * 
+ * \return `true` if the signature matches; `false` otherwise
+*/
 bool File::is_compressed() {
   char buf[ZIP_MAGIC_LEN];
   if (this->get_magic(ZIP_MAGIC_LEN, buf)) {
-    perror("magic");
-    std::cerr << "Could not read magic for file " << this->get_abs_path() << std::endl;
+    LOG_E("is_compressed", std::format("Could not read magic for file {}", this->get_name()));
+    return false;
   }
   if (ZIP_MAGIC == std::string(buf)) {
     return true;
