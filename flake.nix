@@ -23,6 +23,7 @@
         cmake
         mpi
         cmakeCurses
+        valgrind
       ];
     shellHook = ''
         export CPATH=$CPATH:$PWD/include/fastflow:$PWD/include/miniz

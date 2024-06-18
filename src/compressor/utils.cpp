@@ -10,9 +10,6 @@
 #include <unistd.h>
 #include <format>
 
-const char* ZIP_MAGIC = "spmzip";
-const unsigned char ZIP_MAGIC_LEN = 6;
-
 
 namespace fs = std::filesystem;
 
@@ -68,7 +65,6 @@ Entity::Entity(char* rel_path) : Entity::Entity(std::string(rel_path)) {}
 
 File::File(fs::path path) {
   this->path = std::move(path);
-  LOG_D("File", "Created file " + this->get_name());
 }
 
 bool File::load() {
@@ -101,15 +97,72 @@ bool File::load() {
   return true;
 }
 
-bool File::get_magic(unsigned short len, char* buf) {
-  if (!this->exists()) return 0;
-  std::ifstream file(this->get_abs_path(), std::ios::binary | std::ios::in);
-  if (!file.is_open()) {
-    LOG_E("get_magic", std::format("Could not open {}", this->get_name()));
+bool File::unload() {
+  if (munmap(this->contents, this->stats.st_size) < 0) {
+    LOG_E("file unload", std::format("Could not unload {}", this->get_name()));
     return false;
   }
-  file.read(buf, len);
-  file.close();
+  return true;
+}
+
+std::vector<int> File::get_splits(int split_size)
+{
+  std::vector<int> splits = {};
+  if (this->contents == nullptr) {
+    LOG_D("get_splits", std::format("The file needs to be loaded in order to retreive the splits"));
+    return splits;
+  }
+  // The file is not compressed
+  if (!this->is_compressed()) {
+    // file size is <= than the split size
+    if (this->stats.st_size <= split_size) {
+      splits.emplace_back(0);
+      splits.emplace_back(this->stats.st_size);
+      return splits;
+    }
+    // file size is > than the split size
+    for (int s = 0; s < this->stats.st_size; s += split_size) {
+      splits.emplace_back(s);
+    }
+    splits.emplace_back(this->stats.st_size);
+    return splits;
+  }
+  // The file is compressed, read split sizes from header
+  int split;
+  int max_splits = this->stats.st_size / sizeof(int);
+  for (int i = 0; i < max_splits; i++) {
+    char* start_from = (char*) this->contents;
+    start_from += ZIP_MAGIC_LEN;
+    start_from += i * sizeof(int);
+    memcpy(&split, start_from, sizeof(int));
+    if (!splits.empty() && split < splits.back()) {
+      LOG_E("splits", std::format("The file `{}` is corrupt and cannot be decompressed", this->get_name()));
+      std::vector<int> dummy = {};
+      return dummy;
+    }
+    if (split == this->stats.st_size) {
+      break;
+    }
+    splits.emplace_back(split);
+  }
+  splits.emplace_back(this->stats.st_size);
+  return splits;
+}
+
+bool File::get_magic(char *buf)
+{
+  if (!this->exists()) return false;
+  if (this->contents == nullptr) {
+    std::ifstream file(this->get_abs_path(), std::ios::binary | std::ios::in);
+    if (!file.is_open()) {
+      LOG_E("get_magic", std::format("Could not open {}", this->get_name()));
+      return false;
+    }
+    file.read(buf, ZIP_MAGIC_LEN);
+    file.close();
+  } else {
+    memcpy(buf, this->contents, ZIP_MAGIC_LEN);
+  }
   return true;
 }
 
@@ -119,13 +172,48 @@ bool File::get_magic(unsigned short len, char* buf) {
  * \return `true` if the signature matches; `false` otherwise
 */
 bool File::is_compressed() {
-  char buf[ZIP_MAGIC_LEN];
-  if (this->get_magic(ZIP_MAGIC_LEN, buf)) {
-    LOG_E("is_compressed", std::format("Could not read magic for file {}", this->get_name()));
+  if (this->compressed < 0) {
+    char buf[ZIP_MAGIC_LEN];
+    if (!this->get_magic(buf)) {
+      LOG_E("is_compressed", std::format("Could not read magic for file {}", this->get_name()));
+      this->compressed = 0;
+    }
+    if (memcmp(buf, ZIP_MAGIC, ZIP_MAGIC_LEN) == 0) {
+      this->compressed = 1;
+    } else {
+      this->compressed = 0;
+    }
+  }
+  return this->compressed;
+}
+
+// ---------
+// | Other |
+// ---------
+
+// write size bytes starting from ptr into filename
+bool writeFile(const std::string &filename, unsigned char *ptr, size_t size) {
+  FILE *pOutfile = fopen(filename.c_str(), "wb");
+  if (!pOutfile) {
+    LOG_E("writeFile", std::format("Failed opening output file {}", filename));
     return false;
   }
-  if (ZIP_MAGIC == std::string(buf)) {
-    return true;
+  if (fwrite(ptr, 1, size, pOutfile) != size) {
+    LOG_E("writeFile", std::format("Failed writing to output file {}", filename));
+    return false;
   }
-  return false;
+  if (fclose(pOutfile) != 0)
+    return false;
+  return true;
+}
+
+bool removeFile(File file) {
+  if (unlink(file.get_abs_path().c_str()) == -1) {
+    LOG_W("removeFile", std::format("Could not delete {}", file.get_name()));
+    return false;
+  }
+  if (!file.unload()) {
+    return false;
+  }
+  return true;
 }

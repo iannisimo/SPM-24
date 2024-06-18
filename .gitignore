@@ -41,3 +41,6 @@
 # Build
 build/*
 cmake-build-debug
+
+# Data
+data/

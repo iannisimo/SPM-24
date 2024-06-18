@@ -1,5 +1,5 @@
-#ifndef _COMPRESSOR_UTILS
-#define _COMPRESSOR_UTILS
+#ifndef COMPRESSOR_UTILS
+#define COMPRESSOR_UTILS
 
 #include <dirent.h>
 #include <sys/stat.h>
@@ -7,6 +7,9 @@
 #include <filesystem>
 #include <iostream>
 #include <vector>
+
+const char ZIP_MAGIC[] = "spmzip";
+const unsigned char ZIP_MAGIC_LEN = 6;
 
 namespace fs = std::filesystem;
 
@@ -26,14 +29,18 @@ class File {
     operator bool() { return this->exists();};
 
     bool load();
+    bool unload();
+    bool is_compressed();
+
+    std::vector<int> get_splits(int);
+    unsigned char* contents = nullptr;
 
   private:
     fs::path path;
+    char compressed = -1;
     struct stat stats;
-    unsigned char* contents;
 
-    bool get_magic(unsigned short len, char* buf);
-    bool is_compressed();
+    bool get_magic(char* buf);
 };
 
 /**
@@ -55,5 +62,10 @@ class Entity {
     bool exists = false;
     std::vector<File> files = {};
 };
+
+// Other
+
+bool writeFile(const std::string &filename, unsigned char *ptr, size_t size);
+bool removeFile(File file);
 
 #endif

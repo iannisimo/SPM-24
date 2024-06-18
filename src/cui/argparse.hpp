@@ -1,11 +1,11 @@
-#ifndef _CUI_ARGPARSE
-#define _CUI_ARGPARSE
+#ifndef CUI_ARGPARSE
+#define CUI_ARGPARSE
 
 #include <iostream>
 #include <unistd.h>
 #include <getopt.h>
 
-const char* SHORT_OPTS = ":hdkrqS:j:";
+const char* SHORT_OPTS = ":hdkrqS:j:s:";
 const struct option LONG_OPTIONS[] = {
   {"mpi", no_argument, 0, 0},
   {"fastflow", no_argument, 0, 0},
@@ -29,6 +29,7 @@ struct config {
   int           n_targets  = 0;
   int           quiet      = 0;
   int           n_threads  = 1;
+  int           split_size = 1024;
   parallel_impl parallel   = SEQUENTIAL;
 
 
