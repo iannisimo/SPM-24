@@ -105,9 +105,8 @@ bool File::unload() {
   return true;
 }
 
-std::vector<int> File::get_splits(int split_size)
-{
-  std::vector<int> splits = {};
+std::vector<ulong> File::get_splits(ulong split_size) {
+  std::vector<ulong> splits = {};
   if (this->contents == nullptr) {
     LOG_D("get_splits", std::format("The file needs to be loaded in order to retreive the splits"));
     return splits;
@@ -121,23 +120,20 @@ std::vector<int> File::get_splits(int split_size)
       return splits;
     }
     // file size is > than the split size
-    for (int s = 0; s < this->stats.st_size; s += split_size) {
+    for (ulong s = 0; s < this->stats.st_size; s += split_size) {
       splits.emplace_back(s);
     }
     splits.emplace_back(this->stats.st_size);
     return splits;
   }
   // The file is compressed, read split sizes from header
-  int split;
-  int max_splits = this->stats.st_size / sizeof(int);
+  ulong split;
+  ulong max_splits = this->stats.st_size / sizeof(ulong);
   for (int i = 0; i < max_splits; i++) {
-    char* start_from = (char*) this->contents;
-    start_from += ZIP_MAGIC_LEN;
-    start_from += i * sizeof(int);
-    memcpy(&split, start_from, sizeof(int));
+    memcpy(&split, this->contents + ZIP_MAGIC_LEN + (2 + i) * sizeof(ulong), sizeof(ulong));
     if (!splits.empty() && split < splits.back()) {
       LOG_E("splits", std::format("The file `{}` is corrupt and cannot be decompressed", this->get_name()));
-      std::vector<int> dummy = {};
+      std::vector<ulong> dummy = {};
       return dummy;
     }
     if (split == this->stats.st_size) {

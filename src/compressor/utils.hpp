@@ -27,12 +27,13 @@ class File {
     std::string get_abs_path() { return fs::canonical(this->path); };
     bool exists() { return fs::exists(this->path); };
     operator bool() { return this->exists();};
+    size_t size() { return this->stats.st_size; };
 
     bool load();
     bool unload();
     bool is_compressed();
 
-    std::vector<int> get_splits(int);
+    std::vector<ulong> get_splits(ulong);
     unsigned char* contents = nullptr;
 
   private:
