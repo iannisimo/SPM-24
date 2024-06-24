@@ -6,10 +6,10 @@
 
 bool s_compressFile(File file, char* suff, bool keep, ulong split_size) {
   std::vector<ulong> splits = file.get_splits(split_size);
-  ulong tot_bound = ZIP_MAGIC_LEN   // space for magic bytes
-    + sizeof(ulong)                 // space for the length of the uncompressed file
-    + sizeof(ulong)                 // space for the upper-bound of the uncompressed splits
-    + splits.size() * sizeof(ulong);// space for the size of each split (compressed)
+  ulong tot_bound = ZIP_MAGIC_LEN     // space for magic bytes
+    + sizeof(ulong)                   // space for the length of the uncompressed file
+    + sizeof(ulong)                   // space for the upper-bound of the uncompressed splits
+    + splits.size() * sizeof(ulong);  // space for the size of each split (compressed)
     
   for (int idx = 0; idx < (int) splits.size() - 1; idx++) {
     ulong start = splits[idx];
