@@ -2,6 +2,7 @@
 #include "cui/usage.hpp"
 #include "compressor/utils.hpp"
 #include "compressor/sequential.hpp"
+#include "compressor/fastflow.hpp"
 #include "logger.hpp"
 #include <format>
 #include "miniz.h"
@@ -34,6 +35,7 @@ int main(int argc, char *argv[]) {
     case MPI:
       break;
     case FASTFLOW:
+      f_work(entities, args.decompress, args.suff, args.keep, args.split_size, args.n_threads);
       break;
     default:
       LOG_E("", "In the name of god, how the hell did you end up here!");

@@ -6,4 +6,4 @@ add_subdirectory("compressor")
 add_executable(out main.cpp ../include/miniz/miniz.c)
 
 # linking *cui* object to the *main* object to create final executable object *out*
-target_link_libraries(out argparse compressor sequential)
+target_link_libraries(out argparse compressor sequential fastflow)

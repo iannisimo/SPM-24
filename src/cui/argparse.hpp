@@ -29,7 +29,7 @@ struct config {
   int           n_targets  = 0;
   int           quiet      = 0;
   int           n_threads  = 1;
-  int           split_size = 1024;
+  ulong         split_size = 1024UL;
   parallel_impl parallel   = SEQUENTIAL;
 
 
