@@ -3,6 +3,7 @@
 #include "ff/ff.hpp"
 #include <format>
 #include <filesystem>
+#include <time.h>
 
 SourceSink::SourceSink(std::vector<Entity> entities, bool decompress, char *suff, bool keep, ulong split_size) {
   this->entities = entities;
@@ -13,12 +14,14 @@ SourceSink::SourceSink(std::vector<Entity> entities, bool decompress, char *suff
 }
 
 task* SourceSink::svc(task* input) {
+  int thread_num = this->get_my_id();
+  struct timeval tstart, tstop;
+  double diff;
   if (input == nullptr) {
     // No input -> not coming from feedback connection -> generate splits and send to workers
     for(auto &&e : this->entities) {
       for(auto &&f : e.get_files()) {
-
-
+        gettimeofday(&tstart, NULL);
         // Skip files which are already [de]compressed
         bool compressed = f.is_compressed();
         if (compressed != decompress) continue;
@@ -87,11 +90,17 @@ task* SourceSink::svc(task* input) {
             ));
           }
         }
+        gettimeofday(&tstop, NULL);
+
+        diff = ff::diffmsec(tstop, tstart);
+
+        LOG_T("EMITTER", std::format("{}: {}", out_path, diff));
       }
     }
     ff::ff_monode::broadcast_task(ff::ff_monode_t<task>::EOS);
     return ff::ff_monode_t<task>::GO_ON;
   } else {
+    gettimeofday(&tstart, NULL);
     // [de]compressed data received -> write to disk
     LOG_D("Feedback", std::format("Size {}", input->c_size));
     LOG_D("Feedback", std::format("Size {}", input->d_end));
@@ -101,11 +110,20 @@ task* SourceSink::svc(task* input) {
     } else {
       if (!writeFileTo(input->filename, input->d_start, input->d_data, input->d_end - input->d_start));
     }
+
+    gettimeofday(&tstop, NULL);
+    diff = ff::diffmsec(tstop, tstart);
+    LOG_T("COLLECTOR", std::format("{}: {}", input->filename, diff));
+
     return ff::ff_monode_t<task>::GO_ON;
   }
 }
 
 task* Worker::svc(task* input) {
+  int thread_num = this->get_my_id();
+  struct timeval tstart, tstop;
+  double diff;
+  gettimeofday(&tstart, NULL);
   if (!input->decompress) {
     input->c_size = mz_compressBound(input->d_end - input->d_start);
     input->c_data = new unsigned char[input->c_size + 2  * sizeof(ulong)];
@@ -126,6 +144,11 @@ task* Worker::svc(task* input) {
       LOG_E("mz_decompress", std::format("Error decompressing data: {}", ret));
     }
   }
+  gettimeofday(&tstop, NULL);
+  diff = ff::diffmsec(tstop, tstart);
+
+  LOG_T(std::format("WORKER_{}", thread_num), std::format("{}: {}", input->filename, diff));
+
   return input;
 }
 
@@ -153,6 +176,7 @@ bool f_work(std::vector<Entity> entities, bool decompress, char *suff, bool keep
 		LOG_E("Farm", "error");
 		return false;
 	}
+  LOG_T("FULL", std::format("{}", farm.ffTime()));
 
   return true;
 }

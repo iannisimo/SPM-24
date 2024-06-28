@@ -43,11 +43,6 @@ int main(int argc, char *argv[]) {
       break; 
   }
 
-  // unsigned char* diocan = new unsigned char[10];
-  // unsigned char* candio = (unsigned char*) std::string("diocan").c_str();
-  // unsigned long a = 20;
-  // mz_compress(diocan, &a, candio, 5);
-
-  delete[] args.suff;
+  // delete[] args.suff;
   return 0;
 }
