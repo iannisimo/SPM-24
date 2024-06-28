@@ -2,6 +2,7 @@
 #include "utils.hpp"
 #include "ff/ff.hpp"
 #include <format>
+#include <filesystem>
 
 SourceSink::SourceSink(std::vector<Entity> entities, bool decompress, char *suff, bool keep, ulong split_size) {
   this->entities = entities;
@@ -23,7 +24,7 @@ task* SourceSink::svc(task* input) {
         if (compressed != decompress) continue;
 
         LOG_D("main", std::format("Processing file `{}`", f.get_name()));
-        
+
         if (!f.load()) {
           LOG_E("Files", "\tCould not load file");
           continue;
@@ -69,12 +70,14 @@ task* SourceSink::svc(task* input) {
           } else {
             out_path = f.get_abs_path().append(suff);
           }
-          if (!writeFile(out_path, nullptr, 0)) {
-            continue;
-          }
+
           ulong filesize, uncompressed_bound;
           memcpy(&filesize, f.contents + ZIP_MAGIC_LEN, sizeof(ulong));
           memcpy(&uncompressed_bound, f.contents + ZIP_MAGIC_LEN + sizeof(ulong), sizeof(ulong));
+
+          if (!writeFile(out_path, nullptr, filesize)) {
+            continue;
+          }          
 
           for (ulong idx = 0; idx < (ulong) splits.size() - 1; idx++) {
             ff::ff_monode::ff_send_out(new task(
@@ -92,6 +95,12 @@ task* SourceSink::svc(task* input) {
     // [de]compressed data received -> write to disk
     LOG_D("Feedback", std::format("Size {}", input->c_size));
     LOG_D("Feedback", std::format("Size {}", input->d_end));
+    if(!input->decompress) {
+      if (!writeFileEnd(input->filename, input->c_data, input->c_size));
+      if (!writeC(input->filename, input->c_size));
+    } else {
+      if (!writeFileTo(input->filename, input->d_start, input->d_data, input->d_end - input->d_start));
+    }
     return ff::ff_monode_t<task>::GO_ON;
   }
 }
@@ -99,11 +108,14 @@ task* SourceSink::svc(task* input) {
 task* Worker::svc(task* input) {
   if (!input->decompress) {
     input->c_size = mz_compressBound(input->d_end - input->d_start);
-    input->c_data = new unsigned char[input->c_size];
+    input->c_data = new unsigned char[input->c_size + 2  * sizeof(ulong)];
+    memcpy(input->c_data, &(input->d_start), sizeof(ulong));
+    memcpy(input->c_data + sizeof(ulong), &(input->d_end), sizeof(ulong));
     int ret;
-    if ((ret = mz_compress(input->c_data, &(input->c_size), (const unsigned char*) input->d_data, input->d_end - input->d_start)) != MZ_OK) {
+    if ((ret = mz_compress(input->c_data + 2*sizeof(ulong), &(input->c_size), (const unsigned char*) input->d_data, input->d_end - input->d_start)) != MZ_OK) {
       LOG_E("mz_compress", std::format("Error compressing data: {}", ret));
     }
+    input->c_size += 2 * sizeof(ulong);
   } else {
     memcpy(&(input->d_start), input->c_data, sizeof(ulong));
     memcpy(&(input->d_end), input->c_data + sizeof(ulong), sizeof(ulong));
