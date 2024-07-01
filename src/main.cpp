@@ -1,8 +1,13 @@
 #include "cui/argparse.hpp"
 #include "cui/usage.hpp"
 #include "compressor/utils.hpp"
+#if defined(SEQUENTIAL)
 #include "compressor/sequential.hpp"
+#elif defined(FASTFLOW)
 #include "compressor/fastflow.hpp"
+#elif defined(MPI)
+#include "compressor/mpi.hpp"
+#endif
 #include "logger.hpp"
 #include <format>
 #include "miniz.h"
@@ -28,20 +33,7 @@ int main(int argc, char *argv[]) {
     entities.emplace_back(std::move(e));
   }
 
-  switch (args.parallel) {
-    case SEQUENTIAL:
-      s_work(entities, args.decompress, args.suff, args.keep, args.split_size);
-      break;
-    case MPI:
-      break;
-    case FASTFLOW:
-      f_work(entities, args.decompress, args.suff, args.keep, args.split_size, args.n_threads);
-      break;
-    default:
-      LOG_E("", "In the name of god, how the hell did you end up here!");
-      exit(1);
-      break; 
-  }
+  work(entities, args.decompress, args.suff, args.keep, args.split_size, args.n_threads);
 
   return 0;
 }

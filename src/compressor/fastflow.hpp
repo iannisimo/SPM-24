@@ -43,7 +43,7 @@ struct Worker : ff::ff_node_t<task> {
 };
 
 
-bool f_work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads);
+bool work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads);
 
 
 #endif

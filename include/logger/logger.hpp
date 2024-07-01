@@ -40,8 +40,8 @@ void LOG_I(const std::string tag, const std::string msg) {
 }
 
 void LOG_D(const std::string tag, const std::string msg) {
-  if (LOGGER_QUIET > 3) return;
   if (!debug) return;
+  if (LOGGER_QUIET > 3) return;
   if (tag[0] != 0) {
     std::cout << tag << ": " << msg << std::endl;
   } else {

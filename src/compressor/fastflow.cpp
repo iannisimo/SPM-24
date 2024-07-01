@@ -144,7 +144,8 @@ task* Worker::svc(task* input) {
 
 
 
-bool f_work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads) {
+bool work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads) {
+  if (n_threads < 2) n_threads = 2;
   SourceSink ss(entities, decompress, suff, keep, split_size);
 
   ff::ff_Farm<char*, char*> farm(

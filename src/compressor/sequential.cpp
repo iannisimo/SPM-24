@@ -97,7 +97,7 @@ bool s_decompressFile(File file, std::string suff, bool keep) {
   return true;
 }
 
-bool s_work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size) {
+bool work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads) {
   for (auto &&e : entities) {
     for (auto &&f : e.get_files()) {
       LOG_D("main", std::format("Processing file `{}`", f.get_name()));

@@ -6,17 +6,7 @@
 #include <getopt.h>
 
 const char* SHORT_OPTS = ":hdkrqS:j:s:";
-const struct option LONG_OPTIONS[] = {
-  {"mpi", no_argument, 0, 0},
-  {"fastflow", no_argument, 0, 0},
-  {"sequential", no_argument, 0, 0}
-};
-
-typedef enum _parallel {
-  SEQUENTIAL,
-  MPI,
-  FASTFLOW
-} parallel_impl;
+const struct option LONG_OPTIONS[] = {};
 
 struct config {
   bool          help       = false;
@@ -30,7 +20,6 @@ struct config {
   int           quiet      = 0;
   int           n_threads  = 1;
   ulong         split_size = 1024UL;
-  parallel_impl parallel   = SEQUENTIAL;
 
 
   void argparse(int, char**);
