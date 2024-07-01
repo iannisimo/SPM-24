@@ -23,7 +23,7 @@ struct config {
   bool          decompress = false;
   bool          keep       = false;
   bool          recursive  = false;
-  char*         suff       = NULL;
+  std::string   suff       = ".spmzip";
   char*         pname      = NULL;
   char**        targets    = NULL;
   int           n_targets  = 0;

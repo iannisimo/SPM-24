@@ -11,6 +11,19 @@
 const char ZIP_MAGIC[] = "spmzip";
 const unsigned char ZIP_MAGIC_LEN = 6;
 
+struct split {
+  split() {
+    data = nullptr;
+    start = size = 0;
+  };
+
+  split(u_char* data, ulong start, ulong size) : data(data), start(start), size(size) {};
+
+  u_char* data;
+  ulong start;
+  ulong size;
+};
+
 namespace fs = std::filesystem;
 
 /**
@@ -28,18 +41,27 @@ class File {
     bool exists() { return fs::exists(this->path); };
     operator bool() { return this->exists();};
     size_t size() { return this->stats.st_size; };
+    bool uncompressed_size(ulong *size);
+    bool max_split(ulong *size);
 
     bool load();
     bool unload();
     bool is_compressed();
 
-    std::vector<ulong> get_splits(ulong);
+
+    split get_split(ulong split_size);
+
+    ulong get_splits_ub(ulong split_size);
+
     unsigned char* contents = nullptr;
 
   private:
     fs::path path;
     char compressed = -1;
+    ulong next_split = 0;
     struct stat stats;
+    ulong _uncompressed_size = 0;
+    ulong _max_split = 0;
 
     bool get_magic(char* buf);
 };

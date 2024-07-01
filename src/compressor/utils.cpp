@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <format>
 
-
 namespace fs = std::filesystem;
 
 // ----------
@@ -105,48 +104,77 @@ bool File::unload() {
   return true;
 }
 
-std::vector<ulong> File::get_splits(ulong split_size) {
-  std::vector<ulong> splits = {};
-  if (this->contents == nullptr) {
-    LOG_D("get_splits", std::format("The file needs to be loaded in order to retreive the splits"));
-    return splits;
+bool File::uncompressed_size(ulong *size) {
+  if (this->_uncompressed_size == 0) {
+    if (!this->exists()) return false;
+    if (!this->is_compressed()) {
+      this->_uncompressed_size = this->stats.st_size;
+    } else {
+      if (this->contents == nullptr) {
+        LOG_D("uncompressed_size", "The file needs to be loaded beforehand");
+        return false;
+      }
+      memcpy(&(this->_uncompressed_size), this->contents + ZIP_MAGIC_LEN, sizeof(ulong));
+    }
   }
-  // The file is not compressed
-  if (!this->is_compressed()) {
-    // file size is <= than the split size
-    if (this->stats.st_size <= split_size) {
-      splits.emplace_back(0);
-      splits.emplace_back(this->stats.st_size);
-      return splits;
-    }
-    // file size is > than the split size
-    for (ulong s = 0; s < this->stats.st_size; s += split_size) {
-      splits.emplace_back(s);
-    }
-    splits.emplace_back(this->stats.st_size);
-    return splits;
-  }
-  // The file is compressed, read split sizes from header
-  ulong split;
-  ulong max_splits = this->stats.st_size / sizeof(ulong);
-  for (int i = 0; i < max_splits; i++) {
-    memcpy(&split, this->contents + ZIP_MAGIC_LEN + (2 + i) * sizeof(ulong), sizeof(ulong));
-    if (!splits.empty() && split < splits.back()) {
-      LOG_E("splits", std::format("The file `{}` is corrupt and cannot be decompressed", this->get_name()));
-      std::vector<ulong> dummy = {};
-      return dummy;
-    }
-    if (split == this->stats.st_size) {
-      break;
-    }
-    splits.emplace_back(split);
-  }
-  splits.emplace_back(this->stats.st_size);
-  return splits;
+  *size = this->_uncompressed_size;
+  return true;
 }
 
-bool File::get_magic(char *buf)
+bool File::max_split(ulong *size) {
+  if (this->_max_split == 0) {
+    if (!this->exists()) return false;
+    if (!this->is_compressed()) return false;
+    if (this->contents == nullptr) {
+      LOG_D("max_split", "The file needs to be loaded beforehand");
+      return false;
+    }
+    memcpy(&(this->_max_split), this->contents + ZIP_MAGIC_LEN + sizeof(ulong), sizeof(ulong));
+  }
+  *size = this->_max_split;
+  return true;
+}
+
+split File::get_split(ulong split_size)
 {
+  if (this->contents == nullptr) {
+    LOG_D("get_split", std::format("The file needs to be loaded in order to retreive the splits"));
+    return split();
+  }
+  if (!this->is_compressed()) {
+    if (this->next_split >= this->stats.st_size) {
+      return split();
+    }
+    if (this->stats.st_size <= split_size) {
+      this->next_split = this->stats.st_size;
+      return split(this->contents, 0, this->stats.st_size);
+    }
+    ulong split_from = this->next_split;
+    this->next_split += split_size;
+    if (this->next_split > this->stats.st_size) {
+      this->next_split = this->stats.st_size;
+    }
+    return split(this->contents + split_from, split_from, this->next_split - split_from);
+  }
+  // is_compressed==true
+  if (this->next_split == 0) this->next_split = ZIP_MAGIC_LEN + 2*sizeof(ulong);
+  if (this->next_split >= this->stats.st_size) {
+    return split();
+  }
+  ulong split_from = this->next_split;
+  ulong _split_size, _split_start;
+  memcpy(&_split_size, this->contents + split_from, sizeof(ulong));
+  memcpy(&_split_start, this->contents + split_from + sizeof(ulong), sizeof(ulong));
+  this->next_split += _split_size;
+  _split_size -= 2 * sizeof(ulong);
+  return split(this->contents + split_from + 2*sizeof(ulong), _split_start, _split_size);
+}
+
+ulong File::get_splits_ub(ulong split_size) {
+  return (this->stats.st_size / split_size) + 1;
+}
+
+bool File::get_magic(char *buf) {
   if (!this->exists()) return false;
   if (this->contents == nullptr) {
     std::ifstream file(this->get_abs_path(), std::ios::binary | std::ios::in);

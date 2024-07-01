@@ -43,6 +43,5 @@ int main(int argc, char *argv[]) {
       break; 
   }
 
-  // delete[] args.suff;
   return 0;
 }

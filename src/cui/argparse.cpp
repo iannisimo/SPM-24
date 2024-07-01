@@ -41,7 +41,8 @@ void config::argparse(int argc, char **argv) {
         quiet += 1;
         break;
       case 'S':
-        suff = optarg;
+        // suff = optarg;
+        suff = std::string(optarg);
         break;
       case 'j':
         nt = atoi(optarg);
@@ -79,10 +80,5 @@ void config::argparse(int argc, char **argv) {
     n_threads = 1;
   } else {
     n_threads = n_threads < 2 ? 2 : n_threads;
-  }
-
-  if (suff == NULL) {
-    suff = new char[7];
-    memcpy(suff, ".spmzip", 7);
   }
 }

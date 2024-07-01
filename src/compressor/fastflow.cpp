@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <time.h>
 
-SourceSink::SourceSink(std::vector<Entity> entities, bool decompress, char *suff, bool keep, ulong split_size) {
+SourceSink::SourceSink(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size) {
   this->entities = entities;
   this->decompress = decompress;
   this->suff = suff;
@@ -35,58 +35,55 @@ task* SourceSink::svc(task* input) {
 
         LOG_D("compressed", std::format("{}", f.is_compressed()));
 
-        std::vector<ulong> splits = f.get_splits(split_size);
-
         std::string out_path;
         if (!decompress) {
           // ---  COMPRESS  ---
           out_path = f.get_abs_path().append(this->suff);
           
-          auto preamble = new unsigned char[ZIP_MAGIC_LEN + sizeof(ulong) * (2 + splits.size())];
+          auto preamble = new unsigned char[ZIP_MAGIC_LEN + 2 * sizeof(ulong)];
           memcpy(preamble, ZIP_MAGIC, ZIP_MAGIC_LEN);
           ulong file_size = f.size();
           memcpy(preamble + ZIP_MAGIC_LEN, &file_size, sizeof(ulong));
           memcpy(preamble + ZIP_MAGIC_LEN + sizeof(ulong), &split_size, sizeof(ulong));
-          ulong start = ZIP_MAGIC_LEN + sizeof(ulong) * (2 + splits.size());
-          memcpy(preamble + ZIP_MAGIC_LEN + 2 * sizeof(ulong), &start, sizeof(ulong));
-          ulong zero = 0UL;
-          for (ulong idx = 1; idx < (ulong) splits.size(); idx++) {
-            memcpy(preamble + ZIP_MAGIC_LEN + (2 + idx) * sizeof(ulong), &zero, sizeof(ulong));
-          }
-          if (!writeFile(out_path, preamble, ZIP_MAGIC_LEN + sizeof(ulong) * (2 + splits.size()))) {
+          
+          if (!writeFile(out_path, preamble, ZIP_MAGIC_LEN + 2 * sizeof(ulong))) {
             continue;
           }
           delete[] preamble;
 
-          for (ulong idx = 0; idx < (ulong) splits.size() - 1; idx++) {
+          split s;
+          while ((s = f.get_split(this->split_size)).data != NULL) {
             ff::ff_monode::ff_send_out(new task(
-              out_path,                 // filename
-              splits[idx],              // d_start
-              splits[idx+1],            // d_end
-              f.contents + splits[idx]  // d_data
+              out_path,
+              s.start,
+              s.size,
+              s.data
             ));
           }
         } else {
           // --- DECOMPRESS ---
           if (f.get_name().ends_with(suff)) {
-            out_path = f.get_abs_path().substr(0, f.get_abs_path().size() - std::string(suff).size());
+            out_path = f.get_abs_path().substr(0, f.get_abs_path().size() - suff.size());
           } else {
             out_path = f.get_abs_path().append(suff);
           }
 
           ulong filesize, uncompressed_bound;
-          memcpy(&filesize, f.contents + ZIP_MAGIC_LEN, sizeof(ulong));
-          memcpy(&uncompressed_bound, f.contents + ZIP_MAGIC_LEN + sizeof(ulong), sizeof(ulong));
+          if (!f.uncompressed_size(&filesize)) continue;
+          if (!f.max_split(&uncompressed_bound)) continue;
 
           if (!writeFile(out_path, nullptr, filesize)) {
             continue;
           }          
 
-          for (ulong idx = 0; idx < (ulong) splits.size() - 1; idx++) {
+          split s;
+          while ((s = f.get_split(this->split_size)).data != NULL) {
             ff::ff_monode::ff_send_out(new task(
-              out_path,                     // filename
-              splits[idx+1] - splits[idx],  // c_size
-              f.contents + splits[idx]      // c_data
+              out_path,
+              s.start,
+              uncompressed_bound,
+              s.size,
+              s.data
             ));
           }
         }
@@ -103,12 +100,12 @@ task* SourceSink::svc(task* input) {
     gettimeofday(&tstart, NULL);
     // [de]compressed data received -> write to disk
     LOG_D("Feedback", std::format("Size {}", input->c_size));
-    LOG_D("Feedback", std::format("Size {}", input->d_end));
+    LOG_D("Feedback", std::format("Size {}", input->d_size));
     if(!input->decompress) {
       if (!writeFileEnd(input->filename, input->c_data, input->c_size));
-      if (!writeC(input->filename, input->c_size));
+      // if (!writeC(input->filename, input->c_size));
     } else {
-      if (!writeFileTo(input->filename, input->d_start, input->d_data, input->d_end - input->d_start));
+      if (!writeFileTo(input->filename, input->d_start, input->d_data, input->d_size));
     }
 
     gettimeofday(&tstop, NULL);
@@ -125,22 +122,19 @@ task* Worker::svc(task* input) {
   double diff;
   gettimeofday(&tstart, NULL);
   if (!input->decompress) {
-    input->c_size = mz_compressBound(input->d_end - input->d_start);
+    input->c_size = mz_compressBound(input->d_size);
     input->c_data = new unsigned char[input->c_size + 2  * sizeof(ulong)];
-    memcpy(input->c_data, &(input->d_start), sizeof(ulong));
-    memcpy(input->c_data + sizeof(ulong), &(input->d_end), sizeof(ulong));
+    memcpy(input->c_data + sizeof(ulong), &(input->d_start), sizeof(ulong));
     int ret;
-    if ((ret = mz_compress(input->c_data + 2*sizeof(ulong), &(input->c_size), (const unsigned char*) input->d_data, input->d_end - input->d_start)) != MZ_OK) {
+    if ((ret = mz_compress(input->c_data + 2*sizeof(ulong), &(input->c_size), input->d_data, input->d_size)) != MZ_OK) {
       LOG_E("mz_compress", std::format("Error compressing data: {}", ret));
     }
     input->c_size += 2 * sizeof(ulong);
+    memcpy(input->c_data, &(input->c_size), sizeof(ulong));
   } else {
-    memcpy(&(input->d_start), input->c_data, sizeof(ulong));
-    memcpy(&(input->d_end), input->c_data + sizeof(ulong), sizeof(ulong));
-    ulong bound = input->d_end - input->d_start;
-    input->d_data = new unsigned char[bound];
+    input->d_data = new unsigned char[input->d_size];
     int ret;
-    if ((ret = mz_uncompress(input->d_data, &bound, (const unsigned char*) input->c_data + 2 * sizeof(ulong), input->c_size)) != MZ_OK) {
+    if ((ret = mz_uncompress(input->d_data, &(input->d_size), input->c_data, input->c_size)) != MZ_OK) {
       LOG_E("mz_decompress", std::format("Error decompressing data: {}", ret));
     }
   }
@@ -154,7 +148,7 @@ task* Worker::svc(task* input) {
 
 
 
-bool f_work(std::vector<Entity> entities, bool decompress, char *suff, bool keep, ulong split_size, int n_threads) {
+bool f_work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads) {
   SourceSink ss(entities, decompress, suff, keep, split_size);
 
   ff::ff_Farm<char*, char*> farm(

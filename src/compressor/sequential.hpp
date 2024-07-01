@@ -5,9 +5,22 @@
 #include "logger.hpp"
 #include "miniz.h"
 
-bool s_compressFile(File file, char* suff, bool keep, ulong split_size);
-bool s_decompressFile(File file, char* suff, bool keep);
+char done = 1;
 
-bool s_work(std::vector<Entity> entities, bool decompress, char* suff, bool keep, ulong split_size);
+int mz_compress_(unsigned char *pDest, mz_ulong *pDest_len, const unsigned char *pSource, mz_ulong source_len) {
+  extern char done;
+  LOG_D("mz_compress", "");
+  *pDest_len = source_len / 2;
+  for (ulong i = 0; i < *pDest_len; i++) {
+    pDest[i] = done;
+  }
+  done += 1;
+  return MZ_OK;
+}
+
+bool s_compressFile(File file, std::string suff, bool keep, ulong split_size);
+bool s_decompressFile(File file, std::string suff, bool keep);
+
+bool s_work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size);
 
 #endif
