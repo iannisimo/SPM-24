@@ -35,7 +35,7 @@ void config::argparse(int argc, char **argv) {
         keep = true;
         break;
       case 'r':
-        recursive = true;
+        recurse = true;
         break;
       case 'q':
         quiet += 1;

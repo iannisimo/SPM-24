@@ -76,8 +76,8 @@ class Entity {
     std::string abs_path;
 
     operator bool() const;
-    Entity(std::string rel_path);
-    Entity(char* rel_path);
+    Entity(std::string rel_path, bool recurse);
+    Entity(char* rel_path, bool recurse);
 
     std::vector<File> get_files() { return this->files; };
 

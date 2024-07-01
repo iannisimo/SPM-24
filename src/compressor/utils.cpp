@@ -20,7 +20,7 @@ Entity::operator bool() const {
   return this->exists;
 }
 
-Entity::Entity(std::string rel_path) {
+Entity::Entity(std::string rel_path, bool recurse) {
   // Strip the trailing `/`
   rel_path = rel_path.ends_with("/") ? rel_path.substr(0, rel_path.length() - 1) : rel_path;
   // Extract path info from std::filesystem
@@ -39,13 +39,16 @@ Entity::Entity(std::string rel_path) {
     this->files.emplace_back(File(p));
 
   } else if (fs::is_directory(p)) {
-    
-    // Recurse folder and add all files to `this`
-    LOG_D("entity", std::format("{} is a directory... recursing", this->name));
-    for (auto &&elem : fs::recursive_directory_iterator(p)) {
-      if (elem.is_regular_file()) {
-        this->files.emplace_back(File(elem));
+    if (recurse) {
+      // Recurse folder and add all files to `this`
+      LOG_I("entity", std::format("{} is a directory... recursing", this->name));
+      for (auto &&elem : fs::recursive_directory_iterator(p)) {
+        if (elem.is_regular_file()) {
+          this->files.emplace_back(File(elem));
+        }
       }
+    } else {
+      LOG_I("entity", std::format("{} is a directory... skipping", this->name));
     }
     
   } else {
@@ -56,7 +59,7 @@ Entity::Entity(std::string rel_path) {
   }
 }
 
-Entity::Entity(char* rel_path) : Entity::Entity(std::string(rel_path)) {}
+Entity::Entity(char* rel_path, bool recurse) : Entity::Entity(std::string(rel_path), recurse) {}
 
 // --------
 // | File |
