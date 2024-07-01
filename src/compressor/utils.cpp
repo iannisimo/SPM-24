@@ -85,7 +85,7 @@ bool File::load() {
     return false;
   }
 
-  this->contents = (unsigned char*) mmap(nullptr, this->stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  this->contents = (unsigned char*) mmap(nullptr, this->size(), PROT_READ, MAP_PRIVATE, fd, 0);
   if (this->contents == MAP_FAILED) {
     LOG_E("mmap", "Error mapping file to memory: " + this->get_name());
     close(fd);
@@ -97,7 +97,7 @@ bool File::load() {
 }
 
 bool File::unload() {
-  if (munmap(this->contents, this->stats.st_size) < 0) {
+  if (munmap(this->contents, this->size()) < 0) {
     LOG_E("file unload", std::format("Could not unload {}", this->get_name()));
     return false;
   }
@@ -108,7 +108,7 @@ bool File::uncompressed_size(ulong *size) {
   if (this->_uncompressed_size == 0) {
     if (!this->exists()) return false;
     if (!this->is_compressed()) {
-      this->_uncompressed_size = this->stats.st_size;
+      this->_uncompressed_size = this->size();
     } else {
       if (this->contents == nullptr) {
         LOG_D("uncompressed_size", "The file needs to be loaded beforehand");
@@ -142,23 +142,23 @@ split File::get_split(ulong split_size)
     return split();
   }
   if (!this->is_compressed()) {
-    if (this->next_split >= this->stats.st_size) {
+    if (this->next_split >= this->size()) {
       return split();
     }
-    if (this->stats.st_size <= split_size) {
-      this->next_split = this->stats.st_size;
-      return split(this->contents, 0, this->stats.st_size);
+    if (this->size() <= split_size) {
+      this->next_split = this->size();
+      return split(this->contents, 0, this->size());
     }
     ulong split_from = this->next_split;
     this->next_split += split_size;
-    if (this->next_split > this->stats.st_size) {
-      this->next_split = this->stats.st_size;
+    if (this->next_split > this->size()) {
+      this->next_split = this->size();
     }
     return split(this->contents + split_from, split_from, this->next_split - split_from);
   }
   // is_compressed==true
   if (this->next_split == 0) this->next_split = ZIP_MAGIC_LEN + 2*sizeof(ulong);
-  if (this->next_split >= this->stats.st_size) {
+  if (this->next_split >= this->size()) {
     return split();
   }
   ulong split_from = this->next_split;
@@ -171,7 +171,7 @@ split File::get_split(ulong split_size)
 }
 
 ulong File::get_splits_ub(ulong split_size) {
-  return (this->stats.st_size / split_size) + 1;
+  return (this->size() / split_size) + 1;
 }
 
 bool File::get_magic(char *buf) {

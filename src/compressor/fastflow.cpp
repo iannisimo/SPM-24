@@ -14,7 +14,6 @@ SourceSink::SourceSink(std::vector<Entity> entities, bool decompress, std::strin
 }
 
 task* SourceSink::svc(task* input) {
-  int thread_num = this->get_my_id();
   struct timeval tstart, tstop;
   double diff;
   if (input == nullptr) {
@@ -99,11 +98,8 @@ task* SourceSink::svc(task* input) {
   } else {
     gettimeofday(&tstart, NULL);
     // [de]compressed data received -> write to disk
-    LOG_D("Feedback", std::format("Size {}", input->c_size));
-    LOG_D("Feedback", std::format("Size {}", input->d_size));
     if(!input->decompress) {
       if (!writeFileEnd(input->filename, input->c_data, input->c_size));
-      // if (!writeC(input->filename, input->c_size));
     } else {
       if (!writeFileTo(input->filename, input->d_start, input->d_data, input->d_size));
     }

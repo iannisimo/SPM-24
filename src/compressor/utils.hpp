@@ -40,7 +40,7 @@ class File {
     std::string get_abs_path() { return fs::canonical(this->path); };
     bool exists() { return fs::exists(this->path); };
     operator bool() { return this->exists();};
-    size_t size() { return this->stats.st_size; };
+    ulong size() { return (ulong) this->stats.st_size; };
     bool uncompressed_size(ulong *size);
     bool max_split(ulong *size);
 
