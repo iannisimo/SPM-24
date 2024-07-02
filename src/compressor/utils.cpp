@@ -286,47 +286,6 @@ bool writeFileEnd(const std::string &filename, unsigned char *ptr, size_t size) 
   return true;
 }
 
-bool writeC(const std::string &filename, ulong ci) {
-  FILE *pOutfile = fopen(filename.c_str(), "r+b");
-  if (!pOutfile) {
-    LOG_E("writeFileTo", std::format("Failed opening output file {}", filename));
-    return false;
-  }
-  
-  // Skip magic bytes + 2 ulongs (file len, block size)
-  if (fseek(pOutfile, ZIP_MAGIC_LEN + 2*sizeof(ulong), SEEK_SET) != 0) {
-    LOG_E("writeFileTo", std::format("Failed seeking file {}", filename));
-    fclose(pOutfile);
-    return false;
-  }
-  ulong val, last_c;
-  int pos = 0;
-  do {
-    pos += 1;
-    last_c = val;
-    if (fread(&val, sizeof(ulong), 1, pOutfile) != 1) {
-      LOG_E("writeFileTo", std::format("Failed reading c for file {}", filename));
-      fclose(pOutfile);
-      return false;
-    }
-  } while (val != 0);
-  ci += last_c;
-  if (fseek(pOutfile, -sizeof(ulong), SEEK_CUR) != 0) {
-    LOG_E("writeFileTo", std::format("Failed seeking file {}", filename));
-    fclose(pOutfile);
-    return false;
-  }
-  LOG_D("", std::format("Writing {} at {}", ci, pos));
-  if (fwrite(&ci, sizeof(ulong), 1, pOutfile) != 1) {
-    LOG_E("writeFileTo", std::format("Failed writing to output file {}", filename));
-    fclose(pOutfile);
-    return false;
-  }
-  if (fclose(pOutfile) != 0)
-    return false;
-  return true;
-}
-
 bool removeFile(File file) {
   if (unlink(file.get_abs_path().c_str()) == -1) {
     LOG_W("removeFile", std::format("Could not delete {}", file.get_name()));

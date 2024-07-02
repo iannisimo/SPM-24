@@ -1,13 +1,7 @@
 #include "cui/argparse.hpp"
 #include "cui/usage.hpp"
 #include "compressor/utils.hpp"
-#if defined(SEQUENTIAL)
-#include "compressor/sequential.hpp"
-#elif defined(FASTFLOW)
 #include "compressor/fastflow.hpp"
-#elif defined(MPI)
-#include "compressor/mpi.hpp"
-#endif
 #include "logger.hpp"
 #include <format>
 #include "miniz.h"
