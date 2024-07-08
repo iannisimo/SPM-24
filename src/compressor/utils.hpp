@@ -24,6 +24,30 @@ struct split {
   ulong size;
 };
 
+
+struct task {
+  task(std::string filename, ulong d_start, ulong d_size, unsigned char* d_data) : 
+    filename(filename), d_start(d_start), d_size(d_size), d_data(d_data) {
+      this->decompress = false;
+    };
+  task(std::string filename, ulong d_start, ulong d_size, ulong c_size, unsigned char* c_data) :
+    filename(filename), d_start(d_start), d_size(d_size), c_size(c_size), c_data(c_data) {
+      this->decompress = true;
+    };
+  task() {};
+
+  std::string filename;
+  bool decompress;
+
+  ulong d_start;
+  ulong d_size;
+  unsigned char* d_data;
+
+  ulong c_size;
+  unsigned char* c_data;
+};
+
+
 namespace fs = std::filesystem;
 
 /**
@@ -35,6 +59,7 @@ namespace fs = std::filesystem;
 class File {
   public:
     File(fs::path path);
+    File() {};
 
     std::string get_name() { return this->path.filename(); };
     std::string get_abs_path() { return fs::canonical(this->path); };
@@ -52,6 +77,8 @@ class File {
     split get_split(ulong split_size);
 
     ulong get_splits_ub(ulong split_size);
+
+    std::string get_out_path(std::string suff);
 
     unsigned char* contents = nullptr;
 

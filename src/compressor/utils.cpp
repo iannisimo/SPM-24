@@ -141,8 +141,10 @@ bool File::max_split(ulong *size) {
 split File::get_split(ulong split_size)
 {
   if (this->contents == nullptr) {
-    LOG_D("get_split", std::format("The file needs to be loaded in order to retreive the splits"));
-    return split();
+    if (!this->load()) {
+      LOG_D("get_split", std::format("Could not load the file"));
+      return split();
+    }
   }
   if (!this->is_compressed()) {
     if (this->next_split >= this->size()) {
@@ -213,6 +215,14 @@ bool File::is_compressed() {
   }
   return this->compressed;
 }
+
+std::string File::get_out_path(std::string suff) {
+  if (this->is_compressed() && this->get_name().ends_with(suff)) {
+    return this->get_abs_path().substr(0, this->get_abs_path().size() - suff.size());
+  }
+  return this->get_abs_path().append(suff);
+}
+
 
 // ---------
 // | Other |

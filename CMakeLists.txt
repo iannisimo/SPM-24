@@ -8,7 +8,7 @@ project(multi_file)
 #  c++ standard is c++20
 set(CMAKE_CXX_STANDARD 20)
 #  compilation flags
-set(CMAKE_CXX_FLAGS "-Wall -pthread")
+set(CMAKE_CXX_FLAGS "-Wall -pthread -g")
 
 # add include/*
 include_directories(include/miniz include/logger include/fastflow)
