@@ -22,13 +22,13 @@
         llvmPackages.openmp
         cmake
         mpi
-        mpich
+        openmpi
         cmakeCurses
         valgrind
       ];
     shellHook = ''
         export CPATH=$CPATH:$PWD/include/fastflow:$PWD/include/miniz
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${pkgs.mpich}/lib
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${pkgs.openmpi}/lib
     '';
     };
   });
