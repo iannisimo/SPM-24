@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <iostream>
 #include <vector>
+#include <cstring>
 
 const char ZIP_MAGIC[] = "spmzip";
 const unsigned char ZIP_MAGIC_LEN = 6;
@@ -36,6 +37,44 @@ struct task {
     };
   task() {};
 
+  task(ulong size, u_char* data) {
+    char flag;
+    ulong filename_size;
+    ulong ptr = 0;
+    memcpy(&flag, data + ptr, 1);
+    ptr += 1;
+    memcpy(&filename_size, data + ptr, sizeof(ulong));
+    ptr += sizeof(ulong);
+    auto filename = new char[filename_size];
+    memcpy(filename, data + ptr, filename_size);
+    ptr += filename_size;
+    this->filename = std::string(filename, filename_size);
+    delete[] filename;
+    ulong d_start;
+    memcpy(&d_start, data + ptr, sizeof(ulong));
+    this->d_start = d_start;
+    ptr += sizeof(ulong);
+    ulong d_size;
+    memcpy(&d_size, data + ptr, sizeof(ulong));
+    this->d_size = d_size;
+    ptr += sizeof(ulong);
+    if (flag == 0) {
+      // this->d_data = new u_char[size-ptr];
+      // memcpy(this->d_data, data + ptr, size - ptr);
+      this->d_data = data + ptr;
+      this->decompress = false;
+    } else {
+      ulong c_size;
+      memcpy(&c_size, data + ptr, sizeof(ulong));
+      this->c_size = c_size;
+      ptr += sizeof(ulong);
+      // this->c_data = new u_char[size-ptr];
+      // memcpy(this->c_data, data + ptr, size - ptr);
+      this->c_data = data + ptr;
+      this->decompress = true;
+    }
+  }
+
   std::string filename;
   bool decompress;
 
@@ -45,6 +84,75 @@ struct task {
 
   ulong c_size;
   unsigned char* c_data;
+
+  std::pair<ulong, u_char*> to_data() {
+    if (this->decompress) {
+      return this->to_decompress_data();
+    } else {
+      return this->to_compress_data();
+    }
+  }
+
+
+  private:
+  std::pair<ulong, u_char*> to_compress_data() {
+    char zero = 0;
+    ulong filename_size = this->filename.size();
+    ulong len = 
+      1 +                       // data flag
+      sizeof(ulong) +           // filename size
+      filename_size +           // filename
+      sizeof(ulong) * 2 +       // d_start, d_size
+      this->d_size;             // d_data
+    auto data = new u_char[len];
+    ulong ptr = 0;
+    memcpy(data + ptr, &zero, 1);
+    ptr += 1;
+    memcpy(data + ptr, &filename_size, sizeof(ulong));
+    ptr += sizeof(ulong);
+    memcpy(data + ptr, this->filename.c_str(), filename_size);
+    ptr += filename_size;
+    memcpy(data + ptr, &(this->d_start), sizeof(ulong));
+    ptr += sizeof(ulong);
+    memcpy(data + ptr, &(this->d_size), sizeof(ulong));
+    ptr += sizeof(ulong);
+    memcpy(data + ptr, this->d_data, this->d_size);
+
+    return std::pair<ulong, u_char*>(len, data);
+  }
+
+  std::pair<ulong, u_char*> to_decompress_data() {
+    char one = 1;
+    ulong filename_size = this->filename.size();
+    ulong len = 
+      1 +                       // data flag
+      sizeof(ulong) +           // filename size
+      filename_size +           // filename
+      sizeof(ulong) * 3 +       // d_start, d_size, c_size
+      this->c_size;             // c_data
+    auto data = new u_char[len];
+    ulong ptr = 0;
+    memcpy(data + ptr, &one, 1);
+    ptr += 1;
+    memcpy(data + ptr, &filename_size, sizeof(ulong));
+    ptr += sizeof(ulong);
+    memcpy(data + ptr, this->filename.c_str(), filename_size);
+    ptr += filename_size;
+    memcpy(data + ptr, &(this->d_start), sizeof(ulong));
+    ptr += sizeof(ulong);
+    memcpy(data + ptr, &(this->d_size), sizeof(ulong));
+    ptr += sizeof(ulong);
+    memcpy(data + ptr, &(this->c_size), sizeof(ulong));
+    ptr += sizeof(ulong);
+    memcpy(data + ptr, this->c_data, this->c_size);
+
+    return std::pair<ulong, u_char*>(len, data);
+  }
+
+  // from_compress
+  // input->filename, input->c_data, input->c_size
+  // from_decompress
+  // input->filename, input->d_start, input->d_data, input->d_size
 };
 
 
@@ -105,6 +213,7 @@ class Entity {
     operator bool() const;
     Entity(std::string rel_path, bool recurse);
     Entity(char* rel_path, bool recurse);
+    Entity() {};
 
     std::vector<File> get_files() { return this->files; };
 
