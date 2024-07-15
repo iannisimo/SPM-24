@@ -18,9 +18,9 @@ int mz_compress_(unsigned char *pDest, mz_ulong *pDest_len, const unsigned char 
   return MZ_OK;
 }
 
-bool s_compressFile(File file, std::string suff, bool keep, ulong split_size);
-bool s_decompressFile(File file, std::string suff, bool keep);
+bool s_compressFile(File file, std::string suff, ulong split_size);
+bool s_decompressFile(File file, std::string suff);
 
-bool work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads);
+bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong split_size);
 
 #endif

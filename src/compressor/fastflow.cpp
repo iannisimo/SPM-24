@@ -5,11 +5,10 @@
 #include <filesystem>
 #include <time.h>
 
-Source::Source(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size) {
+Source::Source(std::vector<Entity> entities, bool decompress, std::string suff, ulong split_size) {
   this->entities = entities;
   this->decompress = decompress;
   this->suff = suff;
-  this->keep = keep;
   this->split_size = split_size;
 }
 
@@ -147,9 +146,9 @@ task* Worker::svc(task* input) {
 
 
 
-bool work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads) {
+bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong split_size, int n_threads) {
   if (n_threads < 3) n_threads = 3;
-  Source source(entities, decompress, suff, keep, split_size);
+  Source source(entities, decompress, suff, split_size);
 
   
   std::vector<ff::ff_node*> workers;

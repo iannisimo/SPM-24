@@ -19,9 +19,6 @@ void config::argparse(int argc, char **argv) {
       case 'd':
         decompress = true;
         break;
-      case 'k':
-        keep = true;
-        break;
       case 'r':
         recurse = true;
         break;

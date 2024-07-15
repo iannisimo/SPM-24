@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     entities.emplace_back(std::move(e));
   }
 
-  work(entities, args.decompress, args.suff, args.keep, args.split_size, args.n_threads);
+  work(entities, args.decompress, args.suff, args.split_size, args.n_threads);
 
   return 0;
 }

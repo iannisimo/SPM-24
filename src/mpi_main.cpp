@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
       entities.emplace_back(std::move(e));
     }
 
-    EC_work(entities, args.decompress, args.suff, args.keep, args.split_size, args.n_threads);
+    EC_work(entities, args.decompress, args.suff, args.split_size, args.n_threads);
 
   } else {
     // Worker

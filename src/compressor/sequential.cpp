@@ -4,7 +4,7 @@
 #include "logger.hpp"
 #include <format>
 
-bool s_compressFile(File file, std::string suff, bool keep, ulong split_size) {
+bool s_compressFile(File file, std::string suff, ulong split_size) {
   ulong tot_bound = ZIP_MAGIC_LEN     // space for magic bytes
     + sizeof(ulong)                   // space for the length of the uncompressed file
     + sizeof(ulong);                  // space for the upper-bound of the uncompressed splits
@@ -45,21 +45,17 @@ bool s_compressFile(File file, std::string suff, bool keep, ulong split_size) {
     tot_written += cmp_bound;
   }
 
-  if (!writeFile(file.get_abs_path().append(suff), dest, tot_written)) {
+  if (!writeFile(file.get_out_path(suff), dest, tot_written)) {
     LOG_E("compress", "Could not write compressed file");
     return false;
   }
 
   delete[] dest;
-
-  if (!keep) {
-    return removeFile(file);
-  }
     
   return true;
 }
 
-bool s_decompressFile(File file, std::string suff, bool keep) {
+bool s_decompressFile(File file, std::string suff) {
   ulong filesize, max_bound;
   if (!file.uncompressed_size(&filesize)) return false;
   if (!file.max_split(&max_bound)) return false;
@@ -76,28 +72,17 @@ bool s_decompressFile(File file, std::string suff, bool keep) {
     }
   }
 
-  std::string filename;
-  if (file.get_name().ends_with(suff)) {
-    filename = file.get_abs_path().substr(0, file.get_abs_path().size() - suff.size());
-  } else {
-    filename = file.get_abs_path().append(suff);
-  }
-
-  if (!writeFile(filename, dest, filesize)) {
+  if (!writeFile(file.get_out_path(suff), dest, filesize)) {
     LOG_E("decompress", "Could not write decompressed file");
     return false;
   }
 
   delete[] dest;
 
-  if (!keep) {
-    return removeFile(file);
-  }
-
   return true;
 }
 
-bool work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads) {
+bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong split_size) {
   for (auto &&e : entities) {
     for (auto &&f : e.get_files()) {
       LOG_D("main", std::format("Processing file `{}`", f.get_name()));
@@ -114,9 +99,9 @@ bool work(std::vector<Entity> entities, bool decompress, std::string suff, bool 
       LOG_D("compressed", std::format("{}", f.is_compressed()));
 
       if (decompress) {
-        s_decompressFile(f, suff, keep);
+        s_decompressFile(f, suff);
       } else {
-        s_compressFile(f, suff, keep, split_size);
+        s_compressFile(f, suff, split_size);
       }
     }
   }

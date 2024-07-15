@@ -139,7 +139,7 @@ bool RecvDimBuffer(ulong* size, u_char** buf, int source, int data_tag, MPI_Comm
   return true;
 }
 
-bool EC_work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads);
+bool EC_work(std::vector<Entity> entities, bool decompress, std::string suff, ulong split_size, int n_threads);
 bool W_work(int myId);
 
 

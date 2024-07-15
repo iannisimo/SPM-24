@@ -227,7 +227,6 @@ class Entity {
 bool writeFile(const std::string &filename, unsigned char *ptr, size_t size);
 bool writeFileTo(const std::string &filename, ulong to, unsigned char *ptr, size_t size);
 bool writeFileEnd(const std::string &filename, unsigned char *ptr, size_t size);
-bool writeC(const std::string &filename, ulong ci);
 bool removeFile(File file);
 
 #endif

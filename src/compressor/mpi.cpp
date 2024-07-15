@@ -7,7 +7,7 @@
 #include <mpi.h>
 #include <thread>
 
-bool EC_work(std::vector<Entity> entities, bool decompress, std::string suff, bool keep, ulong split_size, int n_threads) {
+bool EC_work(std::vector<Entity> entities, bool decompress, std::string suff, ulong split_size, int n_threads) {
   setPrefix("EC\t");
   int numProcs;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcs);

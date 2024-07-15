@@ -5,13 +5,12 @@
 #include <unistd.h>
 #include <getopt.h>
 
-const char* SHORT_OPTS = ":hdkrqS:j:s:";
+const char* SHORT_OPTS = ":hdrqS:j:s:";
 const struct option LONG_OPTIONS[] = {};
 
 struct config {
   bool          help       = false;
   bool          decompress = false;
-  bool          keep       = false;
   bool          recurse    = false;
   std::string   suff       = ".spmzip";
   char*         pname      = NULL;
