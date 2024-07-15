@@ -101,9 +101,13 @@ task* Sink::svc(task* input) {
   double diff;
   gettimeofday(&tstart, NULL);
   if(!input->decompress) {
-    if (!writeFileEnd(input->filename, input->c_data, input->c_size));
+    if (!writeFileEnd(input->filename, input->c_data, input->c_size)) {
+      LOG_E("Sink", std::format("Error writing to {}, file might be corrupted", input->filename));
+    };
   } else {
-    if (!writeFileTo(input->filename, input->d_start, input->d_data, input->d_size));
+    if (!writeFileTo(input->filename, input->d_start, input->d_data, input->d_size)) {
+      LOG_E("Sink", std::format("Error writing to {}, file might be corrupted", input->filename));
+    };
   }
   gettimeofday(&tstop, NULL);
   diff = ff::diffmsec(tstop, tstart);
