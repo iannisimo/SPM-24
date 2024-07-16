@@ -64,10 +64,10 @@ for SPLIT in "${SPLITS[@]}"; do
     for NAME in "${!TESTS[@]}"; do
       FILES="${TESTS[$NAME]}"
       echo -n "$NAME,$SPLIT,$N,$P,"
-      CTIME=$($PREFIX $EXE $FILES -s $SPLIT )
+      CTIME=$($PREFIX $EXE $FILES -s $SPLIT 2>/dev/null)
       echo -n "$CTIME,"
       COMPRESSED_FILES=$(find $DIR -name "*.spmzip")
-      DTIME=$($PREFIX $EXE $COMPRESSED_FILES -d -S.orig)
+      DTIME=$($PREFIX $EXE $COMPRESSED_FILES -d -S.orig 2>/dev/null)
       echo -n "$DTIME,"
       DECOMPRESSED_FILES=$(find $DIR -name "*.spmzip.orig")
       ORIG=$(md5sum $FILES | awk '{print $1}' | sort -h) 
