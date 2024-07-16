@@ -3,7 +3,7 @@
 DIR="testdir"
 EXE="../build/src/fastflow"
 
-if [ "$(hostname)" == "spmln" ]; then
+if [ "$(hostname)" == "spmln" ] || [ "$(hostname)" == "r7425renaissance" ]; then
   export LD_LIBRARY_PATH="/home/s.ianniciello/.local/opt/gcc-13.2.0/lib64/:$LD_LIBRARY_PATH"
 fi
 
@@ -13,6 +13,9 @@ mkdir -p $DIR
 if [ "$(hostname)" == "spmln" ]; then
   mkdir -p ../data/
   find /opt/SPMcode/testdir/files/ -name "*.txt" -exec cp {} ../data/ \;
+elif [ "$(hostname)" == "r7425renaissance" ]; then
+  mkdir -p ../data/
+  find /opt/SPMcode/A2/files/ -name "*.txt" -exec cp {} ../data/ \;
 fi
 
 find ../data -name "*.txt" -exec ln {} $DIR/ \;
