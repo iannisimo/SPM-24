@@ -3,9 +3,19 @@
 DIR="testdir"
 EXE="../build/src/sequential"
 
+
+if [ "$(hostname)" == "spmln" ]; then
+  export LD_LIBRARY_PATH="/home/s.ianniciello/.local/opt/gcc-13.2.0/lib64/:$LD_LIBRARY_PATH"
+fi
+
 rm -rf $DIR
 mkdir -p $DIR
-find ../data -name "*.txt" -exec ln {} $DIR/ \;
+
+if [ "$(hostname)" == "spmln" ]; then
+  find /opt/SPMcode/testdir/files/ -name "*.txt" -exec ln -s {} $DIR/ \;
+else
+  find ../data -name "*.txt" -exec ln {} $DIR/ \;
+fi
 
 HUGE="$DIR/huge.txt"
 BIG="$DIR/big.txt"

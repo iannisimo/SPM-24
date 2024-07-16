@@ -3,9 +3,18 @@
 DIR="testdir"
 EXE="../build/src/fastflow"
 
+if [ "$(hostname)" == "spmln" ]; then
+  export LD_LIBRARY_PATH="/home/s.ianniciello/.local/opt/gcc-13.2.0/lib64/:$LD_LIBRARY_PATH"
+fi
+
 rm -rf $DIR
 mkdir -p $DIR
-find ../data -name "*.txt" -exec ln {} $DIR/ \;
+
+if [ "$(hostname)" == "spmln" ]; then
+  find /opt/SPMcode/testdir/files/ -name "*.txt" -exec ln -s {} $DIR/ \;
+else
+  find ../data -name "*.txt" -exec ln {} $DIR/ \;
+fi
 
 HUGE="$DIR/huge.txt"
 BIG="$DIR/big.txt"
@@ -15,7 +24,15 @@ SOME_SMALL=$(find $DIR -name "*.txt" -size -10M)
 SOME_LARGE=$(find $DIR -name "*.txt" -size +10M)
 #       1K   1M      100M      1G (no split)
 SPLITS=(1000 1000000 100000000 1000000000)
-NTHREAD=(3 5 10 20 40)
+
+if [ "$(hostname)" == "spmln" ]; then
+  NTHREADS=(3 5 10 20 40)
+elif [ $(hostname) == "simonemsi" ]; then
+  NTHREADS=(3 6 12)
+else
+  NTHREADS=(3)
+  echo "Machine not known, using 3 threads (minimum)"
+fi
 
 
 declare -A TESTS
