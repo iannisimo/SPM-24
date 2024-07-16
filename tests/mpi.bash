@@ -38,9 +38,9 @@ SOME_LARGE=$(find $DIR -name "*.txt" -size +10M)
 SPLITS=(1000 1000000 100000000 1000000000)
 
 if [ "$(hostname)" == "spmln" ]; then
-  Np=("1:2" "2:1" "1:8" "8:1", "1:32", "8:4" "8:32")
+  Np=("1:2" "2:1" "1:8" "8:1" "1:32" "8:4" "8:32")
 elif [ $(hostname) == "simonemsi" ]; then
-  Np=("1:2" "1:4", "1:6", "1:12")
+  Np=("1:2" "1:4" "1:6" "1:12")
 else
   Np=("1:2")
   echo "Machine not known, using 2 processes"
