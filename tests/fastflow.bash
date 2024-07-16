@@ -43,6 +43,8 @@ TESTS["huge"]="$HUGE"
 TESTS["big"]="$BIG"
 TESTS["small"]="$SMALL"
 
+echo "group,split_size,n_threads,compression_time,decompression_time,diff"
+
 for SPLIT in "${SPLITS[@]}"; do
   for NTHREAD in "${NTHREADS[@]}"; do
     for NAME in "${!TESTS[@]}"; do

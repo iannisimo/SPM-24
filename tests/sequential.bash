@@ -35,10 +35,12 @@ TESTS["huge"]="$HUGE"
 TESTS["big"]="$BIG"
 TESTS["small"]="$SMALL"
 
+echo "group,split_size,compression_time,decompression_time,diff"
+
 for SPLIT in "${SPLITS[@]}"; do
   for NAME in "${!TESTS[@]}"; do
     FILES="${TESTS[$NAME]}"
-    echo -n "$NAME,$SPLIT,1,"
+    echo -n "$NAME,$SPLIT,"
     CTIME=$($EXE $FILES -s $SPLIT )
     echo -n "$CTIME,"
     COMPRESSED_FILES=$(find $DIR -name "*.spmzip")
