@@ -88,7 +88,7 @@ task* Source::svc(task*) {
 
       diff = ff::diffmsec(tstop, tstart);
 
-      LOG_T("EMITTER", std::format("{}: {}", out_path, diff));
+      // LOG_T("EMITTER", std::format("{}: {}", out_path, diff));
     }
   }
   return EOS;
@@ -110,7 +110,7 @@ task* Sink::svc(task* input) {
   }
   gettimeofday(&tstop, NULL);
   diff = ff::diffmsec(tstop, tstart);
-  LOG_T("COLLECTOR", std::format("{}: {}", input->filename, diff));
+  // LOG_T("COLLECTOR", std::format("{}: {}", input->filename, diff));
   return GO_ON;
 }
 
@@ -139,7 +139,7 @@ task* Worker::svc(task* input) {
   gettimeofday(&tstop, NULL);
   diff = ff::diffmsec(tstop, tstart);
 
-  LOG_T(std::format("WORKER_{}", thread_num), std::format("{}: {}", input->filename, diff));
+  // LOG_T(std::format("WORKER_{}", thread_num), std::format("{}: {}", input->filename, diff));
 
   return input;
 }
@@ -171,7 +171,7 @@ bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong
 		LOG_E("pipeline", "error");
 		return false;
 	}
-  LOG_T("FULL", std::format("{}", pipeline.ffTime()));
+  LOG_T("TOTAL", std::format("{}", pipeline.ffwTime() / 1000));
 
   return true;
 }

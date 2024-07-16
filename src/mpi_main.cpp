@@ -14,6 +14,16 @@ int main(int argc, char *argv[]) {
 	char processorName[MPI_MAX_PROCESSOR_NAME];
   
   MPI_Init(&argc, &argv);
+  config args;
+  args.argparse(argc, argv);
+  if (args.help) {
+    usage(args.pname);
+    MPI_Finalize();
+    return 0;
+  }
+  LOGGER_QUIET = args.quiet;
+  MPI_Barrier(MPI_COMM_WORLD);
+  double start = MPI_Wtime();
   MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
   MPI_Comm_rank(MPI_COMM_WORLD, &myId);
   MPI_Get_processor_name(processorName, &nameLen);
@@ -21,14 +31,6 @@ int main(int argc, char *argv[]) {
   // Farm-like structure
   if (myId == 0) {
     // Emitter / Collector
-    config args;
-    args.argparse(argc, argv);
-    if (args.help) {
-      usage(args.pname);
-      MPI_Finalize();
-      return 0;
-    }
-    LOGGER_QUIET = args.quiet;
 
     std::vector<Entity> entities;
     for (int i = 0; i < args.n_targets; i++) {
@@ -47,6 +49,12 @@ int main(int argc, char *argv[]) {
     W_work(myId);
   }
 
+  double stop = MPI_Wtime();
+
+  if (myId == 0) {
+    setPrefix("");
+    LOG_T("TOTAL TIME", std::format("{} - {}: {}", start, stop, stop - start));
+  }
   MPI_Finalize();
   return 0;
 }

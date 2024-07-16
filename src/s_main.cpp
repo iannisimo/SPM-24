@@ -6,9 +6,12 @@
 #include <format>
 #include "miniz.h"
 #include <string>
+#include <ctime> 
 
 int main(int argc, char *argv[]) {
 
+  std::chrono::time_point<std::chrono::system_clock> start, stop;
+  start = std::chrono::system_clock::now();
   config args;
   args.argparse(argc, argv);
   if (args.help) {
@@ -28,6 +31,9 @@ int main(int argc, char *argv[]) {
   }
 
   work(entities, args.decompress, args.suff, args.split_size);
+  stop = std::chrono::system_clock::now();
+  std::chrono::duration<double> delta = stop - start;
+  LOG_T("TOTAL", std::format("{}", delta.count()));
 
   return 0;
 }
