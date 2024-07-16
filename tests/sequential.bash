@@ -12,10 +12,11 @@ rm -rf $DIR
 mkdir -p $DIR
 
 if [ "$(hostname)" == "spmln" ]; then
-  find /opt/SPMcode/testdir/files/ -name "*.txt" -exec ln -s {} $DIR/ \;
-else
-  find ../data -name "*.txt" -exec ln {} $DIR/ \;
+  mkdir -p ../data/
+  find /opt/SPMcode/testdir/files/ -name "*.txt" -exec cp {} ../data/ \;
 fi
+
+find ../data -name "*.txt" -exec ln {} $DIR/ \;
 
 HUGE="$DIR/huge.txt"
 BIG="$DIR/big.txt"
