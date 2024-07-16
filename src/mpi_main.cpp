@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 
   if (myId == 0) {
     setPrefix("");
-    LOG_T("TOTAL TIME", std::format("{} - {}: {}", start, stop, stop - start));
+    LOG_T("", std::format("{}", stop - start));
   }
   MPI_Finalize();
   return 0;

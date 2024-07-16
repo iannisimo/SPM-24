@@ -171,7 +171,7 @@ bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong
 		LOG_E("pipeline", "error");
 		return false;
 	}
-  LOG_T("TOTAL", std::format("{}", pipeline.ffwTime() / 1000));
+  LOG_T("", std::format("{}", pipeline.ffwTime() / 1000));
 
   return true;
 }
