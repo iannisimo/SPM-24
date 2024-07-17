@@ -3,7 +3,7 @@
 DIR="testdir"
 EXE="../build/src/fastflow"
 
-if [ "$(hostname)" == "spmln" ] || [[ $(hostname) =~ "node0[0-9]" ]] || [ "$(hostname)" == "r7425renaissance" ]; then
+if [ "$(hostname)" == "spmln" ] || [[ $(hostname) =~ "node0" ]] || [ "$(hostname)" == "r7425renaissance" ]; then
   export LD_LIBRARY_PATH="/home/s.ianniciello/.local/opt/gcc-13.2.0/lib64/:$LD_LIBRARY_PATH"
 fi
 
@@ -34,7 +34,7 @@ SPLITS=(1000 1000000 100000000 1000000000)
 
 if [ "$(hostname)" == "spmln" ]; then
   NTHREADS=(3 5 10 20 40)
-elif [[ "$(hostname)" =~ "node0[0-9]" ]]; then
+elif [[ "$(hostname)" =~ "node0" ]]; then
   NTHREADS=(3 4 8 16 32)
 elif [ $(hostname) == "simonemsi" ]; then
   NTHREADS=(3 6 12)
