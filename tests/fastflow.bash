@@ -3,7 +3,7 @@
 DIR="testdir"
 EXE="../build/src/fastflow"
 
-if [[ "$(hostname)" =~ "spmln|node0[0-9]" ]] || [ "$(hostname)" == "r7425renaissance" ]; then
+if [ "$(hostname)" == "spmln" ] || [[ $(hostname) =~ "node0[0-9]" ]] || [ "$(hostname)" == "r7425renaissance" ]; then
   export LD_LIBRARY_PATH="/home/s.ianniciello/.local/opt/gcc-13.2.0/lib64/:$LD_LIBRARY_PATH"
 fi
 
