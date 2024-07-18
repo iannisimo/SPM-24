@@ -13,7 +13,7 @@ Source::Source(std::vector<Entity> entities, bool decompress, std::string suff, 
 }
 
 task* Source::svc(task* input) {
-  setPrefix("M ");
+  setPrefix("M  ");
   // No input -> work as emitter
   if (input == nullptr) {
     // generate splits and send to workers
@@ -104,7 +104,7 @@ task* Source::svc(task* input) {
 
 task* Worker::svc(task* input) {
   int worker_num = this->get_my_id();
-  setPrefix(std::format("W{}", worker_num));
+  setPrefix(std::format("W{} ", worker_num));
   LOG_D("- -", input->filename);
   if (!input->decompress) {
     input->c_size = mz_compressBound(input->d_size);
