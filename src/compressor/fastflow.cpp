@@ -13,6 +13,7 @@ Source::Source(std::vector<Entity> entities, bool decompress, std::string suff, 
 }
 
 task* Source::svc(task* input) {
+  setPrefix("M ");
   // No input -> work as emitter
   if (input == nullptr) {
     // generate splits and send to workers
@@ -34,7 +35,7 @@ task* Source::svc(task* input) {
         std::string out_path;
         if (!decompress) {
           // ---  COMPRESS  ---
-          out_path = f.get_abs_path().append(this->suff);
+          out_path = f.get_out_path(suff);
           
           auto preamble = new unsigned char[ZIP_MAGIC_LEN + 2 * sizeof(ulong)];
           memcpy(preamble, ZIP_MAGIC, ZIP_MAGIC_LEN);
@@ -49,6 +50,7 @@ task* Source::svc(task* input) {
 
           split s;
           while ((s = f.get_split(this->split_size)).data != NULL) {
+            LOG_D("C ->", out_path);
             ff_send_out(new task(
               out_path,
               s.start,
@@ -58,11 +60,7 @@ task* Source::svc(task* input) {
           }
         } else {
           // --- DECOMPRESS ---
-          if (f.get_name().ends_with(suff)) {
-            out_path = f.get_abs_path().substr(0, f.get_abs_path().size() - suff.size());
-          } else {
-            out_path = f.get_abs_path().append(suff);
-          }
+          out_path = f.get_out_path(suff);
 
           ulong filesize, uncompressed_bound;
           if (!f.uncompressed_size(&filesize)) continue;
@@ -74,6 +72,7 @@ task* Source::svc(task* input) {
 
           split s;
           while ((s = f.get_split(this->split_size)).data != NULL) {
+            LOG_D("D ->", out_path);
             ff_send_out(new task(
               out_path,
               s.start,
@@ -89,10 +88,12 @@ task* Source::svc(task* input) {
   } else {
     // [de]compressed data received -> write to disk
     if(!input->decompress) {
+      LOG_D("C <-", input->filename);
       if (!writeFileEnd(input->filename, input->c_data, input->c_size)) {
         LOG_E("Sink", std::format("Error writing to {}, file might be corrupted", input->filename));
       };
     } else {
+      LOG_D("D <-", input->filename);
       if (!writeFileTo(input->filename, input->d_start, input->d_data, input->d_size)) {
         LOG_E("Sink", std::format("Error writing to {}, file might be corrupted", input->filename));
       };
@@ -102,6 +103,9 @@ task* Source::svc(task* input) {
 }
 
 task* Worker::svc(task* input) {
+  int worker_num = this->get_my_id();
+  setPrefix(std::format("W{}", worker_num));
+  LOG_D("- -", input->filename);
   if (!input->decompress) {
     input->c_size = mz_compressBound(input->d_size);
     input->c_data = new unsigned char[input->c_size + 2  * sizeof(ulong)];
@@ -125,7 +129,7 @@ task* Worker::svc(task* input) {
 
 
 bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong split_size, int n_threads) {
-  if (n_threads < 3) n_threads = 3;
+  if (n_threads < 2) n_threads = 2;
   const Source source(entities, decompress, suff, split_size);
   const MIH mih;
 
@@ -134,7 +138,7 @@ bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong
 
   
   std::vector<ff::ff_node*> workers;
-  for (int i = 0; i < n_threads - 2; i++) {
+  for (int i = 0; i < n_threads - 1; i++) {
     const Worker w;
     auto wh = new ff::ff_comb(mih, w);
     workers.push_back(wh);
@@ -144,6 +148,8 @@ bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong
   a2a.add_firstset(master, 1);
   a2a.add_secondset(workers, true);
   a2a.wrap_around();
+
+  LOG_D("pre", "starting...");
 
   if (a2a.run_and_wait_end() < 0)
 	{
