@@ -16,7 +16,13 @@ struct Source : ff::ff_monode_t<task> {
     ulong split_size;
 };
 
-struct Worker : ff::ff_minode_t<task> {
+struct MIH : ff::ff_minode_t<task> {
+  task* svc(task* input) {
+    return input;
+  }
+};
+
+struct Worker : ff::ff_monode_t<task> {
   task* svc(task* input);
 };
 
