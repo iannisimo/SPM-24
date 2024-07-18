@@ -88,12 +88,12 @@ task* Source::svc(task* input) {
   } else {
     // [de]compressed data received -> write to disk
     if(!input->decompress) {
-      LOG_D("C <-", input->filename);
+      LOG_D("C <-", std::format("{} {}", input->filename, input->d_start));
       if (!writeFileEnd(input->filename, input->c_data, input->c_size)) {
         LOG_E("Sink", std::format("Error writing to {}, file might be corrupted", input->filename));
       };
     } else {
-      LOG_D("D <-", input->filename);
+      LOG_D("D <-", std::format("{} {}", input->filename, input->d_start));
       if (!writeFileTo(input->filename, input->d_start, input->d_data, input->d_size)) {
         LOG_E("Sink", std::format("Error writing to {}, file might be corrupted", input->filename));
       };
