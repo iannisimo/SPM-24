@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   work(entities, args.decompress, args.suff, args.split_size);
   stop = std::chrono::system_clock::now();
   std::chrono::duration<double> delta = stop - start;
-  
+  LOG_T("", std::format("{}", delta.count()));
 
   return 0;
 }
