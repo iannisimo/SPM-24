@@ -145,7 +145,7 @@ bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong
   }
 
   ff::ff_a2a a2a;
-  a2a.add_firstset(master, 1);
+  a2a.add_firstset(master, 0, true);
   a2a.add_secondset(workers, true);
   a2a.wrap_around();
 
