@@ -156,7 +156,9 @@ bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong
 		LOG_E("a2a", "error");
 		return false;
 	}
-  LOG_T("", std::format("{}", a2a.ffTime() / 1000));
+
+  // Given the wrap_around, the times to check are the stop a start time of the master i.e. the source/sink node
+  LOG_T("", std::format("{}", ff::diffmsec(master[0]->getstoptime(), master[0]->getstarttime()) / 1000));
 
   return true;
 }
