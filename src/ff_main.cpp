@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < args.n_targets; i++) {
     Entity e(args.targets[i], args.recurse);
     if (!e) {
-      LOG_W("Files", std::format("Entity `{}` does not exist", args.targets[i]));
+      
       continue;
     }
     entities.emplace_back(std::move(e));

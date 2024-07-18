@@ -26,9 +26,9 @@ bool EC_work(std::vector<Entity> entities, bool decompress, std::string suff, ul
   while (EOS > 0) {
     // Wait for a worker to request data to process
 
-    LOG_D("", "Waiting for a ping");
+    
     MPI_Waitany(numWorkers, mpi_requests, &index, &mpi_status);
-    LOG_D("WaitWorker", std::format("wakeup from {}", index + 1));
+    
     MPI_Irecv(ping_buf, 1, MPI_CHAR, index + 1, T_REQ, MPI_COMM_WORLD, &(mpi_requests[index]));
 
     int worker = mpi_status.MPI_SOURCE;
@@ -39,17 +39,17 @@ bool EC_work(std::vector<Entity> entities, bool decompress, std::string suff, ul
 
     RecvDimBuffer(&data_size, &data, worker, T_DATA, MPI_COMM_WORLD, &status);
     if (data_size != 0) {
-      LOG_D("", std::format("Received data of size {} from {}", data_size, worker));
+      
       // Write data to disk
       task t(data_size, data);
       if (t.decompress) {
         // split has been compressed
         if (!writeFileEnd(t.filename, t.c_data, t.c_size)) {
-          LOG_E("", std::format("Error writing to {}, file might be corrupted", t.filename));
+          
         };
       } else {
         if (!writeFileTo(t.filename, t.d_start, t.d_data, t.d_size)) {
-          LOG_E("", std::format("Error writing to {}, file might be corrupted", t.filename));
+          
         }
       }
 
@@ -72,7 +72,7 @@ bool EC_work(std::vector<Entity> entities, bool decompress, std::string suff, ul
             ti.skipFile();
             continue;
           }
-          LOG_D("", std::format("Created file {}", t.filename));
+          
           delete[] preamble;
         } else {
           ulong filesize;
@@ -85,7 +85,7 @@ bool EC_work(std::vector<Entity> entities, bool decompress, std::string suff, ul
             ti.skipFile();
             continue;
           }   
-          LOG_D("", std::format("Created file {}", t.filename));
+          
         }
       }
       std::pair<ulong, u_char*> stream = t.to_data();
@@ -117,7 +117,7 @@ bool W_work(int myId) {
     if (data_size == 0) break;
 
     // Data received -> create task
-    LOG_D("", std::format("Received data of size {}", data_size));
+    
     task t(data_size, data);
 
     if (!t.decompress) {
@@ -126,7 +126,7 @@ bool W_work(int myId) {
       memcpy(t.c_data + sizeof(ulong), &(t.d_start), sizeof(ulong));
       int ret;
       if ((ret = mz_compress(t.c_data + 2*sizeof(ulong), &(t.c_size), t.d_data, t.d_size)) != MZ_OK) {
-        LOG_E("mz_compress", std::format("Error compressing data: {}", ret));
+        
       }
       t.c_size += 2 * sizeof(ulong);
       memcpy(t.c_data, &(t.c_size), sizeof(ulong));
@@ -134,7 +134,7 @@ bool W_work(int myId) {
       t.d_data = new unsigned char[t.d_size];
       int ret;
       if ((ret = mz_uncompress(t.d_data, &(t.d_size), t.c_data, t.c_size)) != MZ_OK) {
-        LOG_E("mz_decompress", std::format("Error decompressing data: {}", ret));
+        
       }
     }
     t.decompress = !t.decompress;

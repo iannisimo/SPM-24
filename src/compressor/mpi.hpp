@@ -15,7 +15,7 @@ class TaskIterator {
     std::pair<bool, task> getNext() {
       if (next_e_idx != last_e_idx) {
         if (next_e_idx >= entities.size()) {
-          LOG_D("", std::format("no more entities {}", next_e_idx));
+          
           return std::pair<bool, task>(false, task());
         }
         last_e_idx = next_e_idx;
@@ -29,7 +29,7 @@ class TaskIterator {
           next_e_idx += 1;
           next_f_idx = 0;
           next_split = 0;
-          LOG_D("", std::format("get next entity {}", next_e_idx));
+          
           return getNext();
         }
         file = entity.get_files()[last_f_idx];
@@ -53,7 +53,7 @@ class TaskIterator {
       } else {
         ulong uncompressed_bound;
         if (!file.uncompressed_size(&uncompressed_bound)) {
-          LOG_E("TaskIterator", std::format("File corrupted, skipping {}", file.get_abs_path()));
+          
           next_f_idx += 1;
           this->next_split = 0;
           return getNext();
@@ -84,7 +84,7 @@ class TaskIterator {
     }
 
     void log() {
-      LOG_D("ti", std::format("le {} ne {} lf {} nf {} ns {}", last_e_idx, next_e_idx, last_f_idx, next_f_idx, next_split));
+      
     }
 
   private:
@@ -113,27 +113,27 @@ const ulong zero = 0;
 
 bool SendDimBuffer(ulong size, u_char* buf, int dest, int data_tag, MPI_Comm comm) {
   if (MPI_Send(&size, 1, MPI_LONG, dest, T_SIZE, comm) != 0) {
-    LOG_E("SendDimBuffer", std::format("Could not send buf dim to {}", dest));
+    
     return false;
   }
-  LOG_D("SendDimBuffer", std::format("Sent size {}", size));
+  
   if (MPI_Send(buf, size, MPI_CHAR, dest, data_tag, comm) != 0) {
-    LOG_E("SendDimBuffer", std::format("Could not send buf to {}", dest));
+    
     return false;
   }
-  LOG_D("SendDimBuffer", std::format("Sent data"));
+  
   return true;
 }
 
 bool RecvDimBuffer(ulong* size, u_char** buf, int source, int data_tag, MPI_Comm comm, MPI_Status* status) {
   if (MPI_Recv(size, 1, MPI_LONG, source, T_SIZE, comm, status) != 0) {
-    LOG_E("RecvDimBuffer", std::format("Could not receive buf dim from {}", source));
+    
     return false;
   }
   if (*size == 0) return true;
   *buf = new u_char[*size];
   if (MPI_Recv(*buf, *size, MPI_CHAR, source, data_tag, comm, status) != 0) {
-    LOG_E("RecvDimBuffer", std::format("Could not receive buf from {}", source));
+    
     return false;
   }
   return true;

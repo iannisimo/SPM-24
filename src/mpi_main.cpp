@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < args.n_targets; i++) {
       Entity e(args.targets[i], args.recurse);
       if (!e) {
-        LOG_W("Files", std::format("Entity `{}` does not exist", args.targets[i]));
+        
         continue;
       }
       entities.emplace_back(std::move(e));
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 
   if (myId == 0) {
     setPrefix("");
-    LOG_T("", std::format("{}", stop - start));
+    
   }
   MPI_Finalize();
   return 0;

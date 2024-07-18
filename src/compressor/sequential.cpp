@@ -37,7 +37,7 @@ bool s_compressFile(File file, std::string suff, ulong split_size) {
     ulong cmp_bound = mz_compressBound(s.size);
     int ret;
     if ((ret = mz_compress((dest + tot_written), &cmp_bound, s.data, s.size)) != MZ_OK) {
-      LOG_E("miniz", std::format("Error compressing file: {}", ret));
+      
       return false;
     }
     ulong chunksize = cmp_bound + 2*sizeof(ulong);
@@ -46,7 +46,7 @@ bool s_compressFile(File file, std::string suff, ulong split_size) {
   }
 
   if (!writeFile(file.get_out_path(suff), dest, tot_written)) {
-    LOG_E("compress", "Could not write compressed file");
+    
     return false;
   }
 
@@ -63,17 +63,17 @@ bool s_decompressFile(File file, std::string suff) {
 
   split s;
   while ((s = file.get_split(0)).data != NULL) {
-    LOG_D("AAA", std::format("{} {}", s.size, s.start));
+    
     ulong bound = max_bound;
     int ret;
     if ((ret = mz_uncompress(dest + s.start, &bound, s.data, s.size)) != MZ_OK) {
-      LOG_E("miniz", std::format("Error uncompressing file: {}", ret));
+      
       return false;
     }
   }
 
   if (!writeFile(file.get_out_path(suff), dest, filesize)) {
-    LOG_E("decompress", "Could not write decompressed file");
+    
     return false;
   }
 
@@ -85,18 +85,18 @@ bool s_decompressFile(File file, std::string suff) {
 bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong split_size) {
   for (auto &&e : entities) {
     for (auto &&f : e.get_files()) {
-      LOG_D("main", std::format("Processing file `{}`", f.get_name()));
+      
 
       // Skip files which are already [de]compressed
       bool compressed = f.is_compressed();
       if (compressed != decompress) continue;
 
       if (!f.load()) {
-        LOG_E("Files", "\tCould not load file");
+        
         continue;
       }
 
-      LOG_D("compressed", std::format("{}", f.is_compressed()));
+      
 
       if (decompress) {
         s_decompressFile(f, suff);

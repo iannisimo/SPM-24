@@ -32,7 +32,7 @@ void config::argparse(int argc, char **argv) {
       case 'j':
         nt = atoi(optarg);
         if (nt == 0) {
-          LOG_E("argparse", "Option -j requires a number > 0 as argument");
+          
           help = true;
         } else {
           n_threads = nt;
@@ -41,23 +41,23 @@ void config::argparse(int argc, char **argv) {
       case 's':
         ss = atoi(optarg);
         if (ss == 0) {
-          LOG_E("argparse", "Option -s requires a number > 0 as argumet");
+          
           help = true;
         } else {
           split_size = ss;
         }
         break;
       case ':':
-        LOG_E("args", std::format("Option -{} requires an argument", (char) optopt));
+        
         help = true;
         break;
       case '?':
-        LOG_W("args", std::format("Unknown option -{}", (char) optopt));
+        
         help = true;
         break;
     }
   }
-//  LOG_D("argparse", std::format("{}", optarg));
+//  
   targets = &argv[optind];
   n_targets = argc - optind;
 }

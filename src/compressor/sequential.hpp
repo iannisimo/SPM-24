@@ -9,7 +9,7 @@ char done = 1;
 
 int mz_compress_(unsigned char *pDest, mz_ulong *pDest_len, const unsigned char *pSource, mz_ulong source_len) {
   extern char done;
-  LOG_D("mz_compress", "");
+  
   *pDest_len = source_len / 2;
   for (ulong i = 0; i < *pDest_len; i++) {
     pDest[i] = done;
