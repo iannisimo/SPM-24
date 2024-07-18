@@ -26,10 +26,6 @@ struct Worker : ff::ff_monode_t<task> {
   task* svc(task* input);
 };
 
-struct Sink : ff::ff_minode_t<task> {
-  task* svc(task* input);
-};
-
 bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong split_size, int n_threads);
 
 
