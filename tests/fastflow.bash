@@ -33,13 +33,13 @@ SOME_LARGE=$(find $DIR -name "*.txt" -size +10M)
 SPLITS=(1000 1000000 100000000 1000000000)
 
 if [ "$(hostname)" == "spmln" ]; then
-  NTHREADS=(3 5 10 20 40)
+  NTHREADS=(2 5 10 20 40)
 elif [[ "$(hostname)" =~ "node0" ]]; then
-  NTHREADS=(3 4 8 16 32)
+  NTHREADS=(2 4 8 16 32)
 elif [ $(hostname) == "simonemsi" ]; then
-  NTHREADS=(3 6 12)
+  NTHREADS=(2 6 12)
 else
-  NTHREADS=(3)
+  NTHREADS=(2)
   echo "Machine not known, using 3 threads (minimum)"
 fi
 
