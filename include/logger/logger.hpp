@@ -59,9 +59,9 @@ void LOG_D(const std::string tag, const std::string msg) {
 void LOG_T(const std::string tag, const std::string msg) {
   if (LOGGER_QUIET > 4) return;
   if (tag[0] != 0) {
-    std::cout << prefix << tag << ": " << msg << std::endl;
+    std::cout << tag << ": " << msg << std::endl;
   } else {
-    std::cout << prefix << msg << std::endl;
+    std::cout << msg << std::endl;
   }
 }
 

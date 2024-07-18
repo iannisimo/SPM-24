@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DIR="testdir"
+DIR="/tmp/s.ianniciello_testdir"
 EXE="../build/src/fastflow"
 
 if [ "$(hostname)" == "spmln" ] || [[ $(hostname) =~ "node0" ]] || [ "$(hostname)" == "r7425renaissance" ]; then
@@ -21,7 +21,7 @@ elif [ "$(hostname)" == "r7425renaissance" ]; then
   find /opt/SPMcode/A2/files/ -name "*.txt" -exec cp {} ../data/ \;
 fi
 
-find ../data -name "*.txt" -exec ln {} $DIR/ \;
+find ../data -name "*.txt" -exec cp {} $DIR/ \;
 
 HUGE="$DIR/huge.txt"
 BIG="$DIR/big.txt"
@@ -58,10 +58,10 @@ for SPLIT in "${SPLITS[@]}"; do
     for NAME in "${!TESTS[@]}"; do
       FILES="${TESTS[$NAME]}"
       echo -n "$NAME,$SPLIT,$NTHREAD,"
-      CTIME=$($EXE $FILES -j $NTHREAD -s $SPLIT )
+      CTIME=$($EXE $FILES -j $NTHREAD -s $SPLIT -qqqq)
       echo -n "$CTIME,"
       COMPRESSED_FILES=$(find $DIR -name "*.spmzip")
-      DTIME=$($EXE $COMPRESSED_FILES -d -j $NTHREAD -S.orig)
+      DTIME=$($EXE $COMPRESSED_FILES -d -j $NTHREAD -S.orig -qqqq)
       echo -n "$DTIME,"
       DECOMPRESSED_FILES=$(find $DIR -name "*.spmzip.orig")
       ORIG=$(md5sum $FILES | awk '{print $1}' | sort -h) 

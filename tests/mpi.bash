@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DIR="testdir"
+DIR="/tmp/s.ianniciello_testdir"
 EXE="../build/src/mpi"
 
 # Define function of 2 args N and P that returns the string  "srun -N N --ntasks-per-node P"
@@ -29,7 +29,7 @@ elif [ "$(hostname)" == "r7425renaissance" ]; then
   find /opt/SPMcode/A2/files/ -name "*.txt" -exec cp {} ../data/ \;
 fi
 
-find ../data -name "*.txt" -exec ln {} $DIR/ \;
+find ../data -name "*.txt" -exec cp {} $DIR/ \;
 
 HUGE="$DIR/huge.txt"
 BIG="$DIR/big.txt"
@@ -67,10 +67,10 @@ for SPLIT in "${SPLITS[@]}"; do
     for NAME in "${!TESTS[@]}"; do
       FILES="${TESTS[$NAME]}"
       echo -n "$NAME,$SPLIT,$N,$P,"
-      CTIME=$($PREFIX $EXE $FILES -s $SPLIT 2>/dev/null)
+      CTIME=$($PREFIX $EXE $FILES -s $SPLIT -qqqq 2>/dev/null)
       echo -n "$CTIME,"
       COMPRESSED_FILES=$(find $DIR -name "*.spmzip")
-      DTIME=$($PREFIX $EXE $COMPRESSED_FILES -d -S.orig 2>/dev/null)
+      DTIME=$($PREFIX $EXE $COMPRESSED_FILES -d -S.orig -qqqq 2>/dev/null)
       echo -n "$DTIME,"
       DECOMPRESSED_FILES=$(find $DIR -name "*.spmzip.orig")
       ORIG=$(md5sum $FILES | awk '{print $1}' | sort -h) 
