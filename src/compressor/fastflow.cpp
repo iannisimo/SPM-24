@@ -156,7 +156,7 @@ bool work(std::vector<Entity> entities, bool decompress, std::string suff, ulong
 		LOG_E("a2a", "error");
 		return false;
 	}
-  LOG_T("", std::format("{}", a2a.ffwTime() / 1000));
+  LOG_T("", std::format("{}", a2a.ffTime() / 1000));
 
   return true;
 }
