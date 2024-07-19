@@ -25,6 +25,7 @@
         openmpi
         cmakeCurses
         valgrind
+        (python3.withPackages (ps: with ps; [ matplotlib pandas ipykernel jupyter ]))
       ];
     shellHook = ''
         export CPATH=$CPATH:$PWD/include/fastflow:$PWD/include/miniz
