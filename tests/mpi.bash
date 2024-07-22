@@ -37,7 +37,7 @@ SOME_LARGE=$(find $DIR -name "*.txt" -size +10M)
 SPLITS=(1000 1000000 100000000 1000000000)
 
 if [[ $(hostname) =~ "node0" ]]; then
-  Np=("2:" "2:--bynode" "32:" "32:--bynode" "256:")
+  Np=("2:" "2:--bynode" "4:" "4:--bynode" "8:" "8:--bynode" "16:" "16:--bynode" "32:" "32:--bynode" "64:" "64:--bynode" "128:" "128:--bynode" "256:")
 elif [ $(hostname) == "simonemsi" ]; then
   Np=("2:" "4:" "6:" "12:")
 else
