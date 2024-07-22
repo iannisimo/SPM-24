@@ -90,11 +90,14 @@ bool EC_work(std::vector<Entity> entities, bool decompress, std::string suff, ul
       }
       std::pair<ulong, u_char*> stream = t.to_data();
       SendDimBuffer(stream.first, stream.second, worker, T_DATA, MPI_COMM_WORLD);
+      delete[] stream.second;
     } else {
       MPI_Send(&zero, 1, MPI_LONG, worker, T_SIZE, MPI_COMM_WORLD);
       EOS -= 1;
     }
   }
+  delete[] ping_buf;
+  delete[] mpi_requests;
   return true;
 }
 
@@ -122,7 +125,7 @@ bool W_work(int myId) {
 
     if (!t.decompress) {
       t.c_size = mz_compressBound(t.d_size);
-      t.c_data = new unsigned char[t.c_size + 2  * sizeof(ulong)];
+      t.set_c_data(new unsigned char[t.c_size + 2  * sizeof(ulong)]);
       memcpy(t.c_data + sizeof(ulong), &(t.d_start), sizeof(ulong));
       int ret;
       if ((ret = mz_compress(t.c_data + 2*sizeof(ulong), &(t.c_size), t.d_data, t.d_size)) != MZ_OK) {
@@ -131,7 +134,7 @@ bool W_work(int myId) {
       t.c_size += 2 * sizeof(ulong);
       memcpy(t.c_data, &(t.c_size), sizeof(ulong));
     } else {
-      t.d_data = new unsigned char[t.d_size];
+      t.set_d_data(new unsigned char[t.d_size]);
       int ret;
       if ((ret = mz_uncompress(t.d_data, &(t.d_size), t.c_data, t.c_size)) != MZ_OK) {
         LOG_E("mz_decompress", std::format("Error decompressing data: {}", ret));
@@ -143,6 +146,7 @@ bool W_work(int myId) {
 
     MPI_Send(ping_buf, 1, MPI_CHAR, 0, T_REQ, MPI_COMM_WORLD);
     SendDimBuffer(stream.first, stream.second, 0, T_DATA, MPI_COMM_WORLD);
+    delete[] stream.second;
     delete[] data;
   }
   return true;
