@@ -75,6 +75,16 @@ struct task {
     }
   }
 
+  // Define delete operator
+  ~task() {
+    if (this->dyn_d_data && this->d_data != nullptr) {
+      delete[] this->d_data;
+    }
+    if (this->dyn_c_data && this->c_data != nullptr) {
+      delete[] this->c_data;
+    }
+  }
+
   std::string filename;
   bool decompress;
 
@@ -93,66 +103,74 @@ struct task {
     }
   }
 
+  void set_d_data(unsigned char* d_data) {
+    this->d_data = d_data;
+    this->dyn_d_data = true;
+  }
+
+  void set_c_data(unsigned char* c_data) {
+    this->c_data = c_data;
+    this->dyn_c_data = true;
+  }
+
 
   private:
-  std::pair<ulong, u_char*> to_compress_data() {
-    char zero = 0;
-    ulong filename_size = this->filename.size();
-    ulong len = 
-      1 +                       // data flag
-      sizeof(ulong) +           // filename size
-      filename_size +           // filename
-      sizeof(ulong) * 2 +       // d_start, d_size
-      this->d_size;             // d_data
-    auto data = new u_char[len];
-    ulong ptr = 0;
-    memcpy(data + ptr, &zero, 1);
-    ptr += 1;
-    memcpy(data + ptr, &filename_size, sizeof(ulong));
-    ptr += sizeof(ulong);
-    memcpy(data + ptr, this->filename.c_str(), filename_size);
-    ptr += filename_size;
-    memcpy(data + ptr, &(this->d_start), sizeof(ulong));
-    ptr += sizeof(ulong);
-    memcpy(data + ptr, &(this->d_size), sizeof(ulong));
-    ptr += sizeof(ulong);
-    memcpy(data + ptr, this->d_data, this->d_size);
+    bool dyn_d_data = false;
+    bool dyn_c_data = false;
 
-    return std::pair<ulong, u_char*>(len, data);
-  }
+    std::pair<ulong, u_char*> to_compress_data() {
+      char zero = 0;
+      ulong filename_size = this->filename.size();
+      ulong len = 
+        1 +                       // data flag
+        sizeof(ulong) +           // filename size
+        filename_size +           // filename
+        sizeof(ulong) * 2 +       // d_start, d_size
+        this->d_size;             // d_data
+      auto data = new u_char[len];
+      ulong ptr = 0;
+      memcpy(data + ptr, &zero, 1);
+      ptr += 1;
+      memcpy(data + ptr, &filename_size, sizeof(ulong));
+      ptr += sizeof(ulong);
+      memcpy(data + ptr, this->filename.c_str(), filename_size);
+      ptr += filename_size;
+      memcpy(data + ptr, &(this->d_start), sizeof(ulong));
+      ptr += sizeof(ulong);
+      memcpy(data + ptr, &(this->d_size), sizeof(ulong));
+      ptr += sizeof(ulong);
+      memcpy(data + ptr, this->d_data, this->d_size);
 
-  std::pair<ulong, u_char*> to_decompress_data() {
-    char one = 1;
-    ulong filename_size = this->filename.size();
-    ulong len = 
-      1 +                       // data flag
-      sizeof(ulong) +           // filename size
-      filename_size +           // filename
-      sizeof(ulong) * 3 +       // d_start, d_size, c_size
-      this->c_size;             // c_data
-    auto data = new u_char[len];
-    ulong ptr = 0;
-    memcpy(data + ptr, &one, 1);
-    ptr += 1;
-    memcpy(data + ptr, &filename_size, sizeof(ulong));
-    ptr += sizeof(ulong);
-    memcpy(data + ptr, this->filename.c_str(), filename_size);
-    ptr += filename_size;
-    memcpy(data + ptr, &(this->d_start), sizeof(ulong));
-    ptr += sizeof(ulong);
-    memcpy(data + ptr, &(this->d_size), sizeof(ulong));
-    ptr += sizeof(ulong);
-    memcpy(data + ptr, &(this->c_size), sizeof(ulong));
-    ptr += sizeof(ulong);
-    memcpy(data + ptr, this->c_data, this->c_size);
+      return std::pair<ulong, u_char*>(len, data);
+    }
 
-    return std::pair<ulong, u_char*>(len, data);
-  }
+    std::pair<ulong, u_char*> to_decompress_data() {
+      char one = 1;
+      ulong filename_size = this->filename.size();
+      ulong len = 
+        1 +                       // data flag
+        sizeof(ulong) +           // filename size
+        filename_size +           // filename
+        sizeof(ulong) * 3 +       // d_start, d_size, c_size
+        this->c_size;             // c_data
+      auto data = new u_char[len];
+      ulong ptr = 0;
+      memcpy(data + ptr, &one, 1);
+      ptr += 1;
+      memcpy(data + ptr, &filename_size, sizeof(ulong));
+      ptr += sizeof(ulong);
+      memcpy(data + ptr, this->filename.c_str(), filename_size);
+      ptr += filename_size;
+      memcpy(data + ptr, &(this->d_start), sizeof(ulong));
+      ptr += sizeof(ulong);
+      memcpy(data + ptr, &(this->d_size), sizeof(ulong));
+      ptr += sizeof(ulong);
+      memcpy(data + ptr, &(this->c_size), sizeof(ulong));
+      ptr += sizeof(ulong);
+      memcpy(data + ptr, this->c_data, this->c_size);
 
-  // from_compress
-  // input->filename, input->c_data, input->c_size
-  // from_decompress
-  // input->filename, input->d_start, input->d_data, input->d_size
+      return std::pair<ulong, u_char*>(len, data);
+    }
 };
 
 
