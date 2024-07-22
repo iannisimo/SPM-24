@@ -23,6 +23,8 @@ elif [ "$(hostname)" == "r7425renaissance" ]; then
   find /opt/SPMcode/A2/files/ -name "*.txt" -exec cp {} $DIR \;
 elif [[ $(hostname) =~ "node0" ]]; then
   find /opt/ohpc/pub/SPMcode/A2/files/ -name "*.txt" -exec cp {} $DIR \;
+elif [ $(hostname) == "simonemsi" ]; then
+  find ../data/ -name "*.txt" -exec cp {} $DIR \;
 fi
 
 HUGE="$DIR/huge.txt"
