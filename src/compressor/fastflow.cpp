@@ -13,7 +13,6 @@ Source::Source(std::vector<Entity> entities, bool decompress, std::string suff, 
 }
 
 task* Source::svc(task* input) {
-  setPrefix("M \t");
   // No input -> work as emitter
   if (input == nullptr) {
     // generate splits and send to workers
@@ -23,14 +22,14 @@ task* Source::svc(task* input) {
         bool compressed = f.is_compressed();
         if (compressed != decompress) continue;
 
-        LOG_D("Source", std::format("Processing file `{}`", f.get_name()));
+        LOG_D("Source", std::format("Processing file `{}`", f.get_name()), "M 	");
 
         if (!f.load()) {
-          LOG_E("Files", "\tCould not load file");
+          LOG_E("Files", "\tCould not load file", "M 	");
           continue;
         }
 
-        LOG_D("compressed", std::format("{}", f.is_compressed()));
+        LOG_D("compressed", std::format("{}", f.is_compressed()), "M 	");
 
         std::string out_path;
         if (!decompress) {
@@ -50,7 +49,7 @@ task* Source::svc(task* input) {
 
           split s;
           while ((s = f.get_split(this->split_size)).data != NULL) {
-            LOG_D("C ->", out_path);
+            LOG_D("C ->", out_path, "M 	");
             ff_send_out(new task(
               out_path,
               s.start,
@@ -72,7 +71,7 @@ task* Source::svc(task* input) {
 
           split s;
           while ((s = f.get_split(this->split_size)).data != NULL) {
-            LOG_D("D ->", out_path);
+            LOG_D("D ->", out_path, "M 	");
             ff_send_out(new task(
               out_path,
               s.start,
@@ -88,14 +87,14 @@ task* Source::svc(task* input) {
   } else {
     // [de]compressed data received -> write to disk
     if(!input->decompress) {
-      LOG_D("C <-", std::format("{} {}", input->filename, input->d_start));
+      LOG_D("C <-", std::format("{} {}", input->filename, input->d_start), "M 	");
       if (!writeFileEnd(input->filename, input->c_data, input->c_size)) {
-        LOG_E("Sink", std::format("Error writing to {}, file might be corrupted", input->filename));
+        LOG_E("Sink", std::format("Error writing to {}, file might be corrupted", input->filename), "M 	");
       };
     } else {
-      LOG_D("D <-", std::format("{} {}", input->filename, input->d_start));
+      LOG_D("D <-", std::format("{} {}", input->filename, input->d_start), "M 	");
       if (!writeFileTo(input->filename, input->d_start, input->d_data, input->d_size)) {
-        LOG_E("Sink", std::format("Error writing to {}, file might be corrupted", input->filename));
+        LOG_E("Sink", std::format("Error writing to {}, file might be corrupted", input->filename), "M 	");
       };
     }
     return GO_ON;
@@ -104,15 +103,14 @@ task* Source::svc(task* input) {
 
 task* Worker::svc(task* input) {
   int worker_num = this->get_my_id();
-  setPrefix(std::format("W{}\t", worker_num));
-  LOG_D("- -", std::format("{} {}", input->filename, input->d_start));
+  LOG_D("- -", std::format("{} {}", input->filename, input->d_start), std::format("{} \t", worker_num));
   if (!input->decompress) {
     input->c_size = mz_compressBound(input->d_size);
     input->c_data = new unsigned char[input->c_size + 2  * sizeof(ulong)];
     memcpy(input->c_data + sizeof(ulong), &(input->d_start), sizeof(ulong));
     int ret;
     if ((ret = mz_compress(input->c_data + 2*sizeof(ulong), &(input->c_size), input->d_data, input->d_size)) != MZ_OK) {
-      LOG_E("mz_compress", std::format("Error compressing data: {}", ret));
+      LOG_E("mz_compress", std::format("Error compressing data: {}", ret), std::format("{} \t", worker_num));
     }
     input->c_size += 2 * sizeof(ulong);
     memcpy(input->c_data, &(input->c_size), sizeof(ulong));
@@ -120,7 +118,7 @@ task* Worker::svc(task* input) {
     input->d_data = new unsigned char[input->d_size];
     int ret;
     if ((ret = mz_uncompress(input->d_data, &(input->d_size), input->c_data, input->c_size)) != MZ_OK) {
-      LOG_E("mz_decompress", std::format("Error decompressing data: {}", ret));
+      LOG_E("mz_decompress", std::format("Error decompressing data: {}", ret), std::format("{} \t", worker_num));
     }
   }
   return input;

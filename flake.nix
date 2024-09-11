@@ -24,6 +24,7 @@
         mpi
         openmpi
         cmakeCurses
+        sshfs
         valgrind
       ];
     shellHook = ''

@@ -18,41 +18,49 @@ void setPrefix(std::string pfx) {
   prefix = pfx;
 }
 
-
-void LOG_E(const std::string tag, const std::string msg) {
+ 
+void LOG_E(const std::string tag, const std::string msg, std::string pfx = "") {
   if (LOGGER_QUIET > 2) return;
+  if (pfx == "")
+    pfx = prefix;
   if (tag[0] != 0) {
-    std::cerr << prefix << tag << ": " << msg << std::endl;
+    std::cerr << pfx << tag << ": " << msg << std::endl;
   } else {
-    std::cerr << prefix << msg << std::endl;
+    std::cerr << pfx << msg << std::endl;
   }
 }
-
-void LOG_W(const std::string tag, const std::string msg) {
+ 
+void LOG_W(const std::string tag, const std::string msg, std::string pfx = "") {
   if (LOGGER_QUIET > 1) return;
+  if (pfx == "")
+    pfx = prefix;
   if (tag[0] != 0) {
-    std::cout << prefix << tag << ": " << msg << std::endl;
+    std::cout << pfx << tag << ": " << msg << std::endl;
   } else {
-    std::cout << prefix << msg << std::endl;
+    std::cout << pfx << msg << std::endl;
   }
 }
-
-void LOG_I(const std::string tag, const std::string msg) {
+ 
+void LOG_I(const std::string tag, const std::string msg, std::string pfx = "") {
   if (LOGGER_QUIET > 0) return;
+  if (pfx == "")
+    pfx = prefix;
   if (tag[0] != 0) {
-    std::cout << prefix << tag << ": " << msg << std::endl;
+    std::cout << pfx << tag << ": " << msg << std::endl;
   } else {
-    std::cout << prefix << msg << std::endl;
+    std::cout << pfx << msg << std::endl;
   }
 }
-
-void LOG_D(const std::string tag, const std::string msg) {
+ 
+void LOG_D(const std::string tag, const std::string msg, std::string pfx = "") {
   if (!debug) return;
+  if (pfx == "")
+    pfx = prefix;
   if (LOGGER_QUIET > 3) return;
   if (tag[0] != 0) {
-    std::cout << prefix << tag << ": " << msg << std::endl;
+    std::cout << pfx << tag << ": " << msg << std::endl;
   } else {
-    std::cout << prefix << msg << std::endl;
+    std::cout << pfx << msg << std::endl;
   }
 }
 

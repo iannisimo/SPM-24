@@ -13,10 +13,6 @@ auto usage = [](const char* program_name) {
   std::cerr << "  -r\t\tRecursively process directories" << std::endl;
   std::cerr << "  -s DIM\tSpecify the max size of a zip part in bytes [default: inf]" << std::endl;
   std::cerr << "  -S SUFF\tSpecify a suffix to append to the target(s) [default: .spmcomp]" << std::endl;
-  std::cerr << "  --mpi\t\tUse mpi for parallelization" << std::endl;
-  std::cerr << "  --fastflow\tUse fastflow for parallelization" << std::endl;
-  std::cerr << "Default:" << std::endl;
-  std::cerr << "  Compress the target(s) deleting the original" << std::endl;
 };
 
 #endif
